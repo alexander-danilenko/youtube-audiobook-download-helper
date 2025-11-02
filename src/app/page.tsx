@@ -75,6 +75,9 @@ export default function Home() {
 
             {/* Book Table Section */}
             <Paper elevation={0} sx={{ bgcolor: 'background.paper', overflow: 'hidden' }}>
+              <Typography variant="h6" component="h2" sx={{ p: 3, pb: 2, fontWeight: 500 }}>
+                Books
+              </Typography>
               <BookList
                 books={books}
                 onBooksChange={setBooks}
