@@ -26,6 +26,16 @@
 - Test: `npm test` (if configured)
 - Lint: `npm run lint` (auto-fix: `npm run lint -- --fix`)
 
+## SPECIFICATIONS & REQUIREMENTS
+- **MANDATORY**: Keep `SPECS.md` and code implementation synchronized at all times
+- **Code → Specs**: When making functionality/behavior/experience changes in code, update `SPECS.md` to reflect those changes
+- **Specs → Code**: When requirements are added or modified in `SPECS.md`, implement corresponding changes in code
+- Both directions must be kept in sync:
+  - New features require both code implementation AND spec updates
+  - Bug fixes that change behavior require spec updates if they affect documented requirements
+  - Refactoring that changes user experience requires spec updates
+- Review `SPECS.md` before and after making significant changes to ensure alignment
+
 ## CODE STYLE
 - TypeScript strict mode REQUIRED (`strict: true`)
 - Explicit return types; explicit types when inference insufficient
