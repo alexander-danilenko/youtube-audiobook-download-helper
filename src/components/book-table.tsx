@@ -10,6 +10,7 @@ import { useBookTable } from '../hooks/use-book-table';
 import { EditableCell } from './editable-cell';
 import { ThumbnailCell } from './thumbnail-cell';
 import { CsvImportExport } from './csv-import-export';
+import { YouTubeUrlCell } from './youtube-url-cell';
 
 
 interface BookTableProps {
@@ -48,9 +49,29 @@ export function BookTable({ books, onBooksChange, onThumbnailClick }: BookTableP
     setCleanDialogOpen(false);
   };
 
-  const handleBookChange = (updatedBook: BookDto): void => {
+  const handleBookChange = useCallback((updatedBook: BookDto) => {
     onBooksChange(books.map((book) => (book.id === updatedBook.id ? updatedBook : book)));
-  };
+  }, [books, onBooksChange]);
+
+  const handleUrlChange = useCallback((bookId: string, url: string) => {
+    const book = books.find((b) => b.id === bookId);
+    if (!book) return;
+    onBooksChange(books.map((b) => (b.id === bookId ? { ...b, url } : b)));
+  }, [books, onBooksChange]);
+
+  const handleMetadataFetched = useCallback((bookId: string, title: string, authorName: string) => {
+    const book = books.find((b) => b.id === bookId);
+    if (!book) return;
+
+    // Only auto-populate if fields are currently empty
+    const updatedBook: BookDto = {
+      ...book,
+      title: book.title.trim() === '' ? title : book.title,
+      author: book.author.trim() === '' ? authorName : book.author,
+    };
+
+    onBooksChange(books.map((b) => (b.id === bookId ? updatedBook : b)));
+  }, [books, onBooksChange]);
 
   const handleBookRemove = (bookId: string): void => {
     // If this is the last book, replace it with a new empty book instead of removing it
@@ -95,7 +116,11 @@ export function BookTable({ books, onBooksChange, onThumbnailClick }: BookTableP
                   <ThumbnailCell videoUrl={book.url} onThumbnailClick={onThumbnailClick} />
                 </TableCell>
                 <TableCell>
-                  <EditableCell value={book.url} onChange={(value) => handleBookChange({ ...book, url: value as string })} />
+                  <YouTubeUrlCell
+                    value={book.url}
+                    onChange={(value) => handleUrlChange(book.id, value)}
+                    onMetadataFetched={(title, authorName) => handleMetadataFetched(book.id, title, authorName)}
+                  />
                 </TableCell>
                 <TableCell>
                   <EditableCell value={book.title} onChange={(value) => handleBookChange({ ...book, title: value as string })} />

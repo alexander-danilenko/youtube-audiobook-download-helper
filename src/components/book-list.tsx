@@ -1,9 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { BookDto } from '../application/dto/book-dto';
 import { CsvImportExport } from './csv-import-export';
 import { BookCard } from './book-card';
@@ -16,8 +14,6 @@ interface BookListProps {
 }
 
 export function BookList({ books, onBooksChange, onThumbnailClick }: BookListProps) {
-  const [cleanDialogOpen, setCleanDialogOpen] = useState<boolean>(false);
-
   const handleAddRow = (): void => {
     const newBook: BookDto = {
       id: Date.now().toString(),
@@ -30,19 +26,6 @@ export function BookList({ books, onBooksChange, onThumbnailClick }: BookListPro
       year: undefined,
     };
     onBooksChange([...books, newBook]);
-  };
-
-  const handleCleanClick = (): void => {
-    setCleanDialogOpen(true);
-  };
-
-  const handleCleanConfirm = (): void => {
-    onBooksChange([]);
-    setCleanDialogOpen(false);
-  };
-
-  const handleCleanCancel = (): void => {
-    setCleanDialogOpen(false);
   };
 
   const handleBookChange = (updatedBook: BookDto): void => {
@@ -84,16 +67,7 @@ export function BookList({ books, onBooksChange, onThumbnailClick }: BookListPro
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1, width: '100%', maxWidth: 'none' }}>
         <CsvImportExport books={books} onBooksChange={onBooksChange} />
         <Button
-          variant="outlined"
-          color="error"
-          startIcon={<DeleteIcon />}
-          onClick={handleCleanClick}
-          disabled={books.length === 0}
-        >
-          Clean
-        </Button>
-        <Button
-          variant="outlined"
+          variant="contained"
           color="primary"
           startIcon={<AddIcon />}
           onClick={handleAddRow}
@@ -101,24 +75,6 @@ export function BookList({ books, onBooksChange, onThumbnailClick }: BookListPro
           Add New Book
         </Button>
       </Box>
-
-      <Dialog
-        open={cleanDialogOpen}
-        onClose={handleCleanCancel}
-      >
-        <DialogTitle>Clear Table</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to clear all books from the table? This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCleanCancel}>Cancel</Button>
-          <Button onClick={handleCleanConfirm} color="error" variant="contained">
-            Clear
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }
