@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Typography, Box, Container, Paper, Stack } from '@mui/material';
+import { Typography, Box, Container, Paper, Stack, Link } from '@mui/material';
 import '../infrastructure/di/container';
 import { useAppStore } from '../application/stores/app-store';
 import { usePersistStore } from '../application/stores/storage-store';
@@ -59,10 +59,16 @@ export default function Home() {
               </Typography>
               <Box component="ul" sx={{ pl: 3, mb: 0, mt: 0 }}>
                 <Typography component="li" variant="body2" sx={{ mb: 0.5 }}>
-                  yt-dlp installed and available in your system PATH
+                  <Link href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener noreferrer" underline="hover">
+                    yt-dlp
+                  </Link>{' '}
+                  installed and available in your system PATH
                 </Typography>
                 <Typography component="li" variant="body2" sx={{ mb: 0 }}>
-                  ffmpeg installed and available in your system PATH
+                  <Link href="https://ffmpeg.org/" target="_blank" rel="noopener noreferrer" underline="hover">
+                    ffmpeg
+                  </Link>{' '}
+                  installed and available in your system PATH
                 </Typography>
               </Box>
             </Paper>
