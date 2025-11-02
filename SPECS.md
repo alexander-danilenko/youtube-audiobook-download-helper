@@ -25,13 +25,23 @@ This document defines the functional requirements for the YT Audiobook Downloade
 - Prevent page scrolling when lightbox is open
 
 ### REQ0013: Filename Template Input
-- Provide an editable input field for the filename template below the book entries
-- Wrap the filename template input in a fieldset with a legend
+- Provide an editable input field for the filename template within the Settings fieldset.
 - Include a Reset button next to the input field that resets the template to the default value
 - Default template: `$author - [$series - $series_num] - $title [$narrator].%(ext)s`
 - Support custom variables: `$author`, `$title`, `$narrator`, `$series`, `$series_num`, `$year`
 - Support yt-dlp placeholders: `%(ext)s`, `%(title)s`, and other standard yt-dlp placeholders
 - Display helper text explaining available variables and placeholders
+
+### REQ0038: Settings Fieldset
+- Provide a "Settings" fieldset to group application-wide configuration options.
+- The "Settings" fieldset should contain the Filename Template Input and the Cookies from Browser dropdown.
+- Display the fieldset with a legend titled "Settings".
+
+### REQ0039: Cookies from Browser Dropdown
+- Provide a dropdown within the Settings fieldset to select a browser for attaching cookies.
+- Supported browser options (values): `none` (default), `brave`, `chrome`, `chromium`, `edge`, `firefox`, `opera`, `safari`, `vivaldi`, `whale`.
+- Display "None" for the `none` option and capitalize other browser names in the UI.
+- Include a short description explaining that this feature helps bypass 403 errors and access non-public accessible videos.
 
 ### REQ0014: Filename Template Processing
 - Replace template variables with actual book data when generating filenames
