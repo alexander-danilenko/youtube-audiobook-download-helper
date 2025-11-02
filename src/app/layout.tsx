@@ -5,7 +5,7 @@ import { ThemeProvider } from "./theme-provider";
 import { CssBaseline } from "@mui/material";
 
 export const metadata: Metadata = {
-  title: "YouTube Audiobook Script Generator",
+  title: "YT Audiobook Downloader",
   description: "Generate shell scripts for downloading YouTube audiobooks with yt-dlp",
 };
 

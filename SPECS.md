@@ -1,7 +1,7 @@
-# YouTube Audiobook Script Generator - Requirements Specification
+# YT Audiobook Downloader - Requirements Specification
 
 ## Overview
-This document defines the functional requirements for the YouTube Audiobook Script Generator application. Each requirement is assigned a unique identifier (REQ####) for tracking and processing.
+This document defines the functional requirements for the YT Audiobook Downloader application. Each requirement is assigned a unique identifier (REQ####) for tracking and processing.
 
 ---
 
@@ -156,7 +156,7 @@ This document defines the functional requirements for the YouTube Audiobook Scri
 - Skip incomplete rows during CSV import if they have fewer columns than expected
 
 ### REQ0032: Page Description and Prerequisites
-- Display a descriptive title "YouTube Audiobook Script Generator" at the top of the page
+- Display a descriptive title "YT Audiobook Downloader" at the top of the page
 - Provide a description explaining what the application does and its purpose
 - List prerequisites (yt-dlp and ffmpeg) with instructions that they must be installed and available in system PATH
 - Display the description and prerequisites in a clearly formatted section above the book entries

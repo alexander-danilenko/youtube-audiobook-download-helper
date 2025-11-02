@@ -39,7 +39,7 @@ export default function Home() {
             {/* Introduction Section */}
             <Paper elevation={0} sx={{ p: 3, bgcolor: 'background.paper' }}>
               <Typography variant="body1" sx={{ mb: 2 }}>
-                The YouTube Audiobook Script Generator is a client-side tool designed to simplify the process of downloading audiobooks from YouTube. 
+                The YT Audiobook Downloader is a client-side tool designed to simplify the process of downloading audiobooks from YouTube. 
                 It allows you to compile a list of YouTube video URLs and associated book metadata (title, author, narrator, series, year). 
                 The application then generates a shell script that leverages{' '}
                 <Typography component="code" variant="inherit" sx={{ bgcolor: 'action.hover', px: 0.5, borderRadius: 0.5, fontFamily: 'monospace' }}>
