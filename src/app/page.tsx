@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Typography, Box, Container, Paper, Stack, Link } from '@mui/material';
+import { Typography, Box, Container, Paper, Stack, Alert, Link } from '@mui/material';
 import '../infrastructure/di/container';
 import { useAppStore } from '../application/stores/app-store';
 import { usePersistStore } from '../application/stores/storage-store';
@@ -53,24 +53,6 @@ export default function Home() {
                 embed comprehensive metadata, chapters, and cover art thumbnails directly into the audio files. 
                 This ensures your downloaded audiobooks are well-organized and ready for your preferred media player.
               </Typography>
-              
-              <Typography variant="h6" component="h2" sx={{ mb: 1.5, fontWeight: 500 }}>
-                Prerequisites
-              </Typography>
-              <Box component="ul" sx={{ pl: 3, mb: 0, mt: 0 }}>
-                <Typography component="li" variant="body2" sx={{ mb: 0.5 }}>
-                  <Link href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener noreferrer" underline="hover">
-                    yt-dlp
-                  </Link>{' '}
-                  installed and available in your system PATH
-                </Typography>
-                <Typography component="li" variant="body2" sx={{ mb: 0 }}>
-                  <Link href="https://ffmpeg.org/" target="_blank" rel="noopener noreferrer" underline="hover">
-                    ffmpeg
-                  </Link>{' '}
-                  installed and available in your system PATH
-                </Typography>
-              </Box>
             </Paper>
 
             {/* Book Table Section */}
@@ -89,6 +71,16 @@ export default function Home() {
             <Paper elevation={0} sx={{ p: 3, bgcolor: 'background.paper' }}>
               <Stack spacing={2}>
                 <FilenameTemplateInput value={filenameTemplate} onChange={setFilenameTemplate} />
+                <Alert severity="warning">
+                  <Link href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener noreferrer" underline="hover">
+                    yt-dlp
+                  </Link>
+                  {' '}and{' '}
+                  <Link href="https://ffmpeg.org/" target="_blank" rel="noopener noreferrer" underline="hover">
+                    ffmpeg
+                  </Link>
+                  {' '}need to be installed in order for the script to work.
+                </Alert>
                 <GenerateScriptButton books={books} filenameTemplate={filenameTemplate} />
               </Stack>
             </Paper>
