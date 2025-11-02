@@ -47,3 +47,11 @@ Conventional Commits: `<type>(<scope>): <subject>`
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`
 
 Example: `feat(audio): add YouTube audio extraction using yt-dlp`
+
+## VERSIONING
+- **MANDATORY**: Each change must bump the version in `package.json` following [Semantic Versioning (SemVer)](https://semver.org/)
+- Format: `MAJOR.MINOR.PATCH` (e.g., `0.1.0`)
+- **MAJOR** (X.0.0): Breaking changes that are incompatible with previous versions
+- **MINOR** (0.X.0): New features added in a backward-compatible manner
+- **PATCH** (0.0.X): Backward-compatible bug fixes
+- Update version in `package.json` before committing changes
