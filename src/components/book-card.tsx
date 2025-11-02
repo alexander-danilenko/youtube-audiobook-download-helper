@@ -15,6 +15,7 @@ interface BookCardProps {
   onBookChange: (updatedBook: BookDto) => void;
   onRemove: () => void;
   onThumbnailClick: (imageUrl: string) => void;
+  skipAutoMetadataFetch?: boolean;
 }
 
 interface MetadataComparison {
@@ -23,11 +24,16 @@ interface MetadataComparison {
   fetched: string;
 }
 
-export function BookCard({ book, onBookChange, onRemove, onThumbnailClick }: BookCardProps) {
+export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipAutoMetadataFetch = false }: BookCardProps) {
   const [localBook, setLocalBook] = useState<BookDto>(book);
   const { thumbnailUrl, fullSizeThumbnailUrl } = useThumbnail(book.url);
-  const { isLoading, fetchMetadata } = useYouTubeMetadata();
+  const { isLoading, fetchMetadata, error: metadataError } = useYouTubeMetadata();
   const fetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Validation state
+  const [isUrlValid, setIsUrlValid] = useState<boolean>(false);
+  const [isThumbnailLoaded, setIsThumbnailLoaded] = useState<boolean>(false);
+  const [metadataFetchError, setMetadataFetchError] = useState<boolean>(false);
   
   // Comparison dialog state
   const [comparisonDialogOpen, setComparisonDialogOpen] = useState(false);
@@ -37,6 +43,39 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick }: Boo
   useEffect(() => {
     setLocalBook(book);
   }, [book]);
+
+  // Validate URL format and reset thumbnail state when URL changes
+  useEffect(() => {
+    if (!localBook.url || localBook.url.trim().length === 0) {
+      setIsUrlValid(false);
+      setIsThumbnailLoaded(false);
+      setMetadataFetchError(false);
+      return;
+    }
+
+    try {
+      const youtubePattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/i;
+      const isValid = youtubePattern.test(localBook.url.trim());
+      setIsUrlValid(isValid);
+      
+      // Reset thumbnail and metadata error state when URL changes
+      if (isValid) {
+        setIsThumbnailLoaded(false);
+        setMetadataFetchError(false);
+      }
+    } catch {
+      setIsUrlValid(false);
+      setIsThumbnailLoaded(false);
+      setMetadataFetchError(false);
+    }
+  }, [localBook.url]);
+
+  // Reset thumbnail loaded state when thumbnail URL becomes null
+  useEffect(() => {
+    if (!thumbnailUrl) {
+      setIsThumbnailLoaded(false);
+    }
+  }, [thumbnailUrl]);
 
   const handleComparisonSelect = (fieldName: string, value: 'current' | 'fetched') => {
     setSelectedValues(prev => ({ ...prev, [fieldName]: value }));
@@ -61,6 +100,7 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick }: Boo
     
     if (!url || url.trim().length === 0) {
       console.log('BookCard: Skipping fetch - empty URL');
+      setMetadataFetchError(false);
       return;
     }
 
@@ -74,6 +114,9 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick }: Boo
       
       if (isValid) {
         console.log('BookCard: Calling fetchMetadata...');
+        setMetadataFetchError(false);
+        
+        // Clear error state before fetch
         const metadata = await fetchMetadata(url);
         console.log('BookCard: fetchMetadata returned:', metadata);
         
@@ -115,12 +158,27 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick }: Boo
             setLocalBook(updatedBook);
             onBookChange(updatedBook);
           }
+          setMetadataFetchError(false);
+        } else {
+          // Metadata fetch returned null, which indicates an error (non-ok response or missing video)
+          setMetadataFetchError(true);
         }
+      } else {
+        setMetadataFetchError(false);
       }
     } catch (error) {
       console.error('BookCard: Error fetching YouTube metadata:', error);
+      // Mark as error if metadata fetch failed
+      setMetadataFetchError(true);
     }
   }, [localBook, fetchMetadata, onBookChange]);
+  
+  // Update metadata error state when hook error changes
+  useEffect(() => {
+    if (metadataError) {
+      setMetadataFetchError(true);
+    }
+  }, [metadataError]);
 
   const handleChange = useCallback((key: keyof BookDto, value: string | number | undefined) => {
     let parsedValue: string | number | undefined = value;
@@ -143,9 +201,12 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick }: Boo
         clearTimeout(fetchTimeoutRef.current);
       }
 
-      fetchTimeoutRef.current = setTimeout(() => {
-        attemptFetchMetadata(parsedValue.trim());
-      }, 500);
+      // Only auto-fetch metadata if skipAutoMetadataFetch is false
+      if (!skipAutoMetadataFetch) {
+        fetchTimeoutRef.current = setTimeout(() => {
+          attemptFetchMetadata(parsedValue.trim());
+        }, 500);
+      }
     }
   }, [localBook, onBookChange, attemptFetchMetadata]);
 
@@ -163,17 +224,17 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick }: Boo
     }
   };
 
-  // Validate YouTube URL
-  const isValidYoutubeUrl = (url: string): boolean => {
-    if (!url.trim()) return false;
-    const youtubePattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/i;
-    return youtubePattern.test(url.trim());
+  const handleThumbnailLoad = (): void => {
+    setIsThumbnailLoaded(true);
   };
 
-  // Determine if URL and thumbnail are valid
-  const isUrlValid = isValidYoutubeUrl(localBook.url);
-  const isThumbnailFetched = !!thumbnailUrl;
-  const isValidated = isUrlValid && isThumbnailFetched;
+  const handleThumbnailError = (): void => {
+    setIsThumbnailLoaded(false);
+  };
+
+  // Calculate validation state
+  // URL is fully valid when: format is valid, thumbnail URL exists and is loaded, no metadata errors, and not currently loading
+  const isUrlFullyValid = isUrlValid && !!thumbnailUrl && isThumbnailLoaded && !metadataFetchError && !isLoading;
 
   return (
     <>
@@ -193,68 +254,63 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick }: Boo
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         {thumbnailUrl ? (
           <IconButton onClick={handleThumbnailClick} sx={{ width: 80, height: 60, p: 0, flexShrink: 0 }}>
-            <Image src={thumbnailUrl} alt="Video thumbnail" width={80} height={60} style={{ objectFit: 'cover', borderRadius: 4 }} />
+            <Image 
+              src={thumbnailUrl} 
+              alt="" 
+              width={80} 
+              height={60} 
+              style={{ objectFit: 'cover', borderRadius: 4 }} 
+              onLoad={handleThumbnailLoad}
+              onError={handleThumbnailError}
+            />
           </IconButton>
         ) : (
           <Box sx={{ width: 80, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'action.disabledBackground', borderRadius: 1, flexShrink: 0 }}>
             <Typography variant="caption" color="text.secondary">No preview</Typography>
           </Box>
         )}
-          <TextField
-            label="YouTube URL"
-            value={localBook.url}
-            onChange={(e) => handleChange('url', e.target.value)}
-            fullWidth
-            variant="outlined"
-            size="small"
-            disabled={isLoading}
-            error={isUrlValid && !isThumbnailFetched}
-            helperText={
-              isUrlValid && !isThumbnailFetched ? 'Loading thumbnail...' :
-              isValidated ? '✓ Valid' :
-              ''
-            }
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                ...(isValidated && {
-                  '& fieldset': {
-                    borderColor: '#4caf50',
-                    borderWidth: 2,
-                  },
-                  '&:hover fieldset': {
-                    borderColor: '#45a049',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#4caf50',
-                  },
-                }),
+        <TextField
+          label="YouTube URL"
+          value={localBook.url}
+          onChange={(e) => handleChange('url', e.target.value)}
+          fullWidth
+          variant="outlined"
+          size="small"
+          disabled={isLoading}
+          error={isUrlValid && (metadataFetchError || (!!thumbnailUrl && !isThumbnailLoaded))}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: isUrlFullyValid ? 'success.main' : undefined,
               },
-              '& .MuiOutlinedInput-input': {
-                ...(isValidated && {
-                  color: '#2e7d32',
-                  fontWeight: 500,
-                }),
+              '&:hover fieldset': {
+                borderColor: isUrlFullyValid ? 'success.main' : undefined,
               },
-            }}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  {isLoading ? (
-                    <CircularProgress size={20} />
-                  ) : (
-                    <IconButton
-                      size="small"
-                      onClick={() => attemptFetchMetadata(localBook.url.trim())}
-                      disabled={!localBook.url.trim()}
-                      title="Refresh metadata from YouTube"
-                    >
-                      <AutorenewIcon fontSize="small" />
-                    </IconButton>
-                  )}
-                </InputAdornment>
-              ),
-            }}
-          />
+              '&.Mui-focused fieldset': {
+                borderColor: isUrlFullyValid ? 'success.main' : undefined,
+                borderWidth: isUrlFullyValid ? 2 : undefined,
+              },
+            },
+          }}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                {isLoading ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  <IconButton
+                    size="small"
+                    onClick={() => attemptFetchMetadata(localBook.url.trim())}
+                    disabled={!localBook.url.trim() || skipAutoMetadataFetch}
+                    title="Refresh metadata from YouTube"
+                  >
+                    <AutorenewIcon fontSize="small" />
+                  </IconButton>
+                )}
+              </InputAdornment>
+            ),
+          }}
+        />
           <IconButton onClick={onRemove} color="error" aria-label="remove book" sx={{ flexShrink: 0 }} disabled={isLoading}>
           <DeleteIcon />
         </IconButton>

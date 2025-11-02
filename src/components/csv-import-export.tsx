@@ -9,6 +9,7 @@ import { BookDto } from '../application/dto/book-dto';
 interface CsvImportExportProps {
   books: BookDto[];
   onBooksChange: (books: BookDto[]) => void;
+  onImport?: (importedBooks: BookDto[]) => void;
 }
 
 const CSV_COLUMNS = [
@@ -21,7 +22,7 @@ const CSV_COLUMNS = [
   { key: 'year', label: 'Year' },
 ];
 
-export function CsvImportExport({ books, onBooksChange }: CsvImportExportProps) {
+export function CsvImportExport({ books, onBooksChange, onImport }: CsvImportExportProps) {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [hasHeaders, setHasHeaders] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -85,6 +86,10 @@ export function CsvImportExport({ books, onBooksChange }: CsvImportExportProps) 
       try {
         const importedBooks = parseCsv(text, hasHeaders);
         onBooksChange(importedBooks);
+        // Notify parent about imported books so they can skip metadata fetching
+        if (onImport) {
+          onImport(importedBooks);
+        }
         setImportDialogOpen(false);
         if (fileInputRef.current) {
           fileInputRef.current.value = '';

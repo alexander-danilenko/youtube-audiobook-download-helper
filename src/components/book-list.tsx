@@ -5,6 +5,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { BookDto } from '../application/dto/book-dto';
 import { CsvImportExport } from './csv-import-export';
 import { BookCard } from './book-card';
+import { useRef } from 'react';
 
 
 interface BookListProps {
@@ -14,6 +15,20 @@ interface BookListProps {
 }
 
 export function BookList({ books, onBooksChange, onThumbnailClick }: BookListProps) {
+  // Track book IDs that were imported via CSV to skip metadata fetching
+  const importedBookIdsRef = useRef<Set<string>>(new Set());
+  
+  const handleImportedBooks = (importedBooks: BookDto[]): void => {
+    // Mark all imported books
+    importedBooks.forEach(book => {
+      importedBookIdsRef.current.add(book.id);
+    });
+    // Clear the set after a delay to allow initial render
+    // The imported flag only applies to the initial render, not future updates
+    setTimeout(() => {
+      importedBookIdsRef.current.clear();
+    }, 1000);
+  };
   const handleAddRow = (): void => {
     const newBook: BookDto = {
       id: Date.now().toString(),
@@ -61,11 +76,12 @@ export function BookList({ books, onBooksChange, onThumbnailClick }: BookListPro
             onBookChange={handleBookChange}
             onRemove={() => handleBookRemove(book.id)}
             onThumbnailClick={onThumbnailClick}
+            skipAutoMetadataFetch={importedBookIdsRef.current.has(book.id)}
           />
         ))}
       </Box>
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1, width: '100%', maxWidth: 'none' }}>
-        <CsvImportExport books={books} onBooksChange={onBooksChange} />
+        <CsvImportExport books={books} onBooksChange={onBooksChange} onImport={handleImportedBooks} />
         <Button
           variant="contained"
           color="primary"
