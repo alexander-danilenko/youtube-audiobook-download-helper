@@ -6,7 +6,7 @@ This document defines the functional requirements for the YouTube Audiobook Scri
 ---
 
 ## REQ0001: Book Information Input
-The application shall allow users to input book information in a table format with the following fields:
+The application shall allow users to input book information in a card format with the following fields:
 - YouTube URL (required)
 - Book Title (required)
 - Book Author (required)
@@ -17,89 +17,25 @@ The application shall allow users to input book information in a table format wi
 
 ---
 
-## REQ0002: Table Display
-The application shall display book information in a table format with the following columns:
-- Preview (thumbnail)
-- YouTube URL
-- Book Title
-- Author
-- Narrator
-- Series Name
-- Series Number
-- Year
-- Actions
-
----
-
-## REQ0003: Row Management
+## REQ0003: Book Entry Management
 The application shall allow users to:
-- Add new rows to the table
-- Remove existing rows from the table
-- Have at least one row available at all times
+- Add new book entries
+- Remove existing book entries
+- Have at least one book entry available at all times
 
 ---
 
-## REQ0004: Cell Editing
-The application shall allow users to edit cell values by:
-- Clicking on a cell to enter edit mode
-- Double-clicking on a cell to enter edit mode
-- Typing to modify the cell value
-- Pressing Escape to cancel editing and revert to original value
-- Automatically saving the value when focus leaves the cell
-
----
-
-## REQ0005: Keyboard Navigation - Tab Key
-The application shall support keyboard navigation where:
-- Pressing Tab moves the cursor to the next cell in the same row
-- When at the last cell of a row, pressing Tab moves to the first cell of the next row
-- When at the last cell of the last row, pressing Tab exits edit mode
-
----
-
-## REQ0006: Keyboard Navigation - Enter Key
-The application shall support keyboard navigation where:
-- Pressing Enter/Return moves the cursor to the cell below in the same column
-- When at the last row, pressing Enter exits edit mode
-- Shift+Enter moves the cursor to the cell above in the same column
-
----
-
-## REQ0007: Keyboard Navigation - Shift+Tab
-The application shall support keyboard navigation where:
-- Pressing Shift+Tab moves the cursor to the previous cell in the same row
-- When at the first cell of a row, pressing Shift+Tab moves to the last cell of the previous row
-
----
-
-## REQ0008: Multi-Cell Selection
-The application shall allow users to:
-- Select multiple cells by holding Ctrl (Windows/Linux) or Cmd (Mac) and clicking cells
-- Visually indicate selected cells with highlighting
-- Toggle cell selection when clicking a selected cell with modifier key pressed
-
----
-
-## REQ0009: Multi-Cell Editing
-The application shall allow users to:
-- Type in a selected cell when multiple cells are selected
-- Apply the same value to all selected cells simultaneously
-- Only update cells of the same data type (text fields update text fields, number fields update number fields)
-
----
-
-## REQ0010: Row Reordering
-The application shall allow users to:
-- Drag and drop table rows to reorder them
-- Visually indicate the row being dragged with reduced opacity
-- Maintain row order after drop operation
+## REQ0004: Input Field Editing
+The application shall allow users to edit input field values by:
+- Typing to modify the field value
+- Automatically saving the value when focus leaves the field
 
 ---
 
 ## REQ0011: YouTube Thumbnail Display
 The application shall:
 - Automatically extract and display a thumbnail image when a valid YouTube URL is entered
-- Display a small thumbnail (medium quality) in the Preview column
+- Display a small thumbnail (medium quality) in each book card
 - Show "No preview" message when no URL is provided or URL is invalid
 - Display thumbnails without requiring API calls
 
@@ -116,7 +52,7 @@ The application shall:
 
 ## REQ0013: Filename Template Input
 The application shall:
-- Provide an editable input field for the filename template below the table
+- Provide an editable input field for the filename template below the book entries
 - Wrap the filename template input in a fieldset with a legend
 - Include a Reset button next to the input field that resets the template to the default value
 - Default template: `$author - [$series - $series_num] - $title [$narrator].%(ext)s`
@@ -138,7 +74,7 @@ The application shall:
 
 ## REQ0015: Shell Script Generation
 The application shall generate a shell script (.sh file) containing:
-- One yt-dlp command per table row
+- One yt-dlp command per book entry
 - Proper command formatting with line continuations
 - Individual filename per command based on the template and book data
 - All required yt-dlp flags for audio extraction, metadata embedding, and formatting
@@ -172,36 +108,9 @@ Each generated command shall include:
 ## REQ0018: State Persistence
 The application shall:
 - Automatically save application state to browser storage
-- Persist the following data: books table data, filename template, column widths
+- Persist the following data: book entries, filename template
 - Restore saved state when the page is refreshed or reopened
 - Handle storage initialization errors gracefully without breaking the application
-
----
-
-## REQ0019: Column Width Customization
-The application shall allow users to:
-- Resize table columns by dragging the column border
-- Maintain column widths after page refresh
-- Enforce a minimum column width to prevent columns from becoming unusable
-- Visually indicate the resize handle on hover
-
----
-
-## REQ0020: Text Overflow Handling
-The application shall:
-- Truncate text that exceeds cell width with ellipsis (`...`)
-- Display full text in a tooltip when hovering over truncated cells
-- Prevent text from overlapping into adjacent columns
-- Maintain cell boundaries and table layout integrity
-
----
-
-## REQ0021: Table Layout Constraints
-The application shall:
-- Fit the table within 100% of the container width
-- Prevent horizontal scrolling
-- Distribute column widths proportionally to maintain table width
-- Use percentage-based widths for responsive layout
 
 ---
 
@@ -235,18 +144,16 @@ The application shall:
 ## REQ0025: User Interface Clarity
 The application shall:
 - Use high contrast colors for text and backgrounds
-- Provide clear visual distinction between editable and non-editable cells
-- Indicate selected cells with distinct highlighting
+- Provide clear visual distinction for editable input fields
 - Show edit mode with a visual indicator (e.g., border highlight)
 
 ---
 
-## REQ0026: Actions Column
+## REQ0026: Book Card Actions
 The application shall:
-- Display an "Actions" column header as a clickable button
-- Provide a "Remove" button in each row's Actions cell
-- Allow removing individual rows via the Remove button
-- Not persist UI interaction state (selections, editing mode) across page refreshes
+- Provide a "Remove" button in each book card
+- Allow removing individual book entries via the Remove button
+- Not persist UI interaction state (editing mode) across page refreshes
 
 ---
 
@@ -254,7 +161,7 @@ The application shall:
 The application shall:
 - Handle datasets larger than 10MB without performance degradation
 - Store data efficiently to accommodate many books
-- Support smooth interaction even with large numbers of rows
+- Support smooth interaction even with large numbers of book entries
 - Complete save operations asynchronously without blocking the UI
 
 ---
@@ -270,8 +177,7 @@ The application shall:
 
 ## REQ0029: Data Integrity
 The application shall:
-- Maintain data consistency during row reordering
-- Preserve all book data when columns are resized
+- Maintain data consistency during book entry updates
 - Ensure no data loss during state persistence operations
 - Validate data structure before saving to storage
 
@@ -288,7 +194,7 @@ The application shall:
 
 ## REQ0031: CSV Import and Export
 The application shall:
-- Provide Export CSV and Import CSV buttons positioned to the left of the "Clean" button, below the table.
+- Provide Export CSV and Import CSV buttons positioned to the left of the "Clean" button, below the book entries.
 - Provide an Export CSV button that generates a CSV file containing all book data
 - Disable the Export CSV button when there are no books to export
 - Include column headers as the first row in exported CSV files
@@ -310,14 +216,13 @@ The application shall:
 - Display a descriptive title "YouTube Audiobook Script Generator" at the top of the page
 - Provide a description explaining what the application does and its purpose
 - List prerequisites (yt-dlp and ffmpeg) with instructions that they must be installed and available in system PATH
-- Display the description and prerequisites in a clearly formatted section above the table
+- Display the description and prerequisites in a clearly formatted section above the book entries
 
 ---
 
-## REQ0033: Add Row Button and Clean Button Grouping
+## REQ0033: Add Book Button and Clean Button Grouping
 The application shall:
-- Provide an "Add Row" floating action button (FAB) and a "Clean" button grouped together with the CSV Import/Export buttons below the table, aligned to the right.
-- Use a round button with a plus icon for adding new rows.
+- Provide an "Add New Book" button and a "Clean" button grouped together with the CSV Import/Export buttons below the book entries, aligned to the right.
 - Match the button style to the Material UI theme.
 - Display the buttons in a flex container.
 
