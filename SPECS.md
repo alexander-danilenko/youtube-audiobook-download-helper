@@ -5,53 +5,42 @@ This document defines the functional requirements for the YouTube Audiobook Scri
 
 ---
 
-## REQ0001: Book Information Input
-The application shall allow users to input book information in a table format with the following fields:
-- YouTube URL (required)
-- Book Title (required)
-- Book Author (required)
-- Narrator (required)
-- Book Series Name (optional)
-- Book Series Number (optional, defaults to 1)
-- Year (optional)
+## Functional Requirements
 
----
+### REQ0001: Book Information Input
+- Allow users to input book information in a table format with the following fields:
+  - YouTube URL (required)
+  - Book Title (required)
+  - Book Author (required)
+  - Narrator (required)
+  - Book Series Name (optional)
+  - Book Series Number (optional, defaults to 1)
+  - Year (optional)
 
-## REQ0003: Book Entry Management
-The application shall allow users to:
-- Add new book entries
-- Remove existing book entries
-- Have at least one book entry available at all times
+### REQ0003: Book Entry Management
+- Allow users to:
+  - Add new book entries
+  - Remove existing book entries
+  - Have at least one book entry available at all times
 
----
+### REQ0004: Input Field Editing
+- Allow users to edit input field values by:
+  - Typing to modify the field value
+  - Automatically saving the value when focus leaves the field
 
-## REQ0004: Input Field Editing
-The application shall allow users to edit input field values by:
-- Typing to modify the field value
-- Automatically saving the value when focus leaves the field
-
----
-
-## REQ0011: YouTube Thumbnail Display
-The application shall:
+### REQ0011: YouTube Thumbnail Display
 - Automatically extract and display a thumbnail image when a valid YouTube URL is entered
 - Display a small thumbnail (medium quality) in each book entry row
 - Show "No preview" message when no URL is provided or URL is invalid
 - Display thumbnails without requiring API calls
 
----
-
-## REQ0012: Thumbnail Lightbox
-The application shall:
+### REQ0012: Thumbnail Lightbox
 - Open a full-size image preview when clicking on a thumbnail
 - Display the lightbox as an overlay with dark background
 - Allow closing the lightbox by clicking outside the image, pressing Escape key, or clicking a close button
 - Prevent page scrolling when lightbox is open
 
----
-
-## REQ0013: Filename Template Input
-The application shall:
+### REQ0013: Filename Template Input
 - Provide an editable input field for the filename template below the book entries
 - Wrap the filename template input in a fieldset with a legend
 - Include a Reset button next to the input field that resets the template to the default value
@@ -60,140 +49,97 @@ The application shall:
 - Support yt-dlp placeholders: `%(ext)s`, `%(title)s`, and other standard yt-dlp placeholders
 - Display helper text explaining available variables and placeholders
 
----
-
-## REQ0014: Filename Template Processing
-The application shall:
+### REQ0014: Filename Template Processing
 - Replace template variables with actual book data when generating filenames
 - Replace longer variable names first (e.g., `$series_num` before `$series`) to avoid partial matches
 - Remove empty optional fields enclosed in brackets `[]` from the final filename
 - Clean up multiple spaces and separators in generated filenames
 - Preserve yt-dlp placeholders as-is in the generated script
 
----
+### REQ0015: Shell Script Generation
+- Generate a shell script (.sh file) containing:
+  - One yt-dlp command per book entry
+  - Proper command formatting with line continuations
+  - Individual filename per command based on the template and book data
+  - All required yt-dlp flags for audio extraction, metadata embedding, and formatting
 
-## REQ0015: Shell Script Generation
-The application shall generate a shell script (.sh file) containing:
-- One yt-dlp command per book entry
-- Proper command formatting with line continuations
-- Individual filename per command based on the template and book data
-- All required yt-dlp flags for audio extraction, metadata embedding, and formatting
-
----
-
-## REQ0016: Script Download
-The application shall:
+### REQ0016: Script Download
 - Provide a button to generate and download the shell script
 - Validate that at least one book has required fields (URL, title, author, narrator) before generating
 - Display an error message if validation fails
 - Automatically trigger browser download when script is generated
 - Name the downloaded file `download-audiobooks.sh`
 
----
+### REQ0017: yt-dlp Command Format
+- Each generated command shall include:
+  - Audio extraction flag (`--extract-audio`)
+  - Audio format specification (`--audio-format m4a`)
+  - Chapter embedding (`--embed-chapters`)
+  - Metadata embedding (`--embed-metadata`)
+  - Thumbnail embedding (`--embed-thumbnail`)
+  - Genre replacement to "Audiobook"
+  - Book metadata mapping (title, author, series, narrator, series number)
+  - Output filename using the template
+  - YouTube URL
 
-## REQ0017: yt-dlp Command Format
-Each generated command shall include:
-- Audio extraction flag (`--extract-audio`)
-- Audio format specification (`--audio-format m4a`)
-- Chapter embedding (`--embed-chapters`)
-- Metadata embedding (`--embed-metadata`)
-- Thumbnail embedding (`--embed-thumbnail`)
-- Genre replacement to "Audiobook"
-- Book metadata mapping (title, author, series, narrator, series number)
-- Output filename using the template
-- YouTube URL
-
----
-
-## REQ0018: State Persistence
-The application shall:
+### REQ0018: State Persistence
 - Automatically save application state to browser storage
 - Persist the following data: book entries, filename template
 - Restore saved state when the page is refreshed or reopened
 - Handle storage initialization errors gracefully without breaking the application
 
----
-
-## REQ0022: Input Validation
-The application shall:
+### REQ0022: Input Validation
 - Accept only valid YouTube URLs in the URL field
 - Validate that required fields (title, author, narrator) are not empty before script generation
 - Provide visual feedback for invalid inputs
 - Allow users to correct invalid data before proceeding
 
----
-
-## REQ0023: Error Handling
-The application shall:
+### REQ0023: Error Handling
 - Handle storage errors gracefully without breaking functionality
 - Display user-friendly error messages when operations fail
 - Continue operating in degraded mode if storage is unavailable
 - Log errors to console for debugging purposes
 
----
-
-## REQ0024: Data Format Support
-The application shall:
+### REQ0024: Data Format Support
 - Support numeric input for Series Number and Year fields
 - Auto-parse numeric values correctly
 - Handle empty or undefined values for optional fields
 - Default Series Number to 1 if not specified or invalid
 
----
-
-## REQ0025: User Interface Clarity
-The application shall:
+### REQ0025: User Interface Clarity
 - Use high contrast colors for text and backgrounds
 - Provide clear visual distinction for editable input fields
 - Show edit mode with a visual indicator (e.g., border highlight)
 
----
-
-## REQ0026: Book Entry Actions
-The application shall:
+### REQ0026: Book Entry Actions
 - Provide a "Remove" button in each book entry row
 - Allow removing individual book entries via the Remove button
 - Not persist UI interaction state (editing mode) across page refreshes
 
----
-
-## REQ0027: Large Dataset Support
-The application shall:
+### REQ0027: Large Dataset Support
 - Handle datasets larger than 10MB without performance degradation
 - Store data efficiently to accommodate many books
 - Support smooth interaction even with large numbers of book entries
 - Complete save operations asynchronously without blocking the UI
 
----
-
-## REQ0028: Single Page Application Behavior
-The application shall:
+### REQ0028: Single Page Application Behavior
 - Operate as a single-page application
 - Not navigate away from the main page
 - Generate and download files without server-side processing
 - Perform all operations client-side
 
----
-
-## REQ0029: Data Integrity
-The application shall:
+### REQ0029: Data Integrity
 - Maintain data consistency during book entry updates
 - Ensure no data loss during state persistence operations
 - Validate data structure before saving to storage
 
----
-
-## REQ0030: Accessibility
-The application shall:
+### REQ0030: Accessibility
 - Support keyboard-only navigation for all functionality
 - Provide appropriate ARIA labels for interactive elements
 - Use semantic HTML elements where applicable
 - Ensure sufficient color contrast for readability
 
----
-
-## REQ0031: CSV Import and Export
-The application shall:
+### REQ0031: CSV Import and Export
 - Provide Export CSV and Import CSV buttons positioned to the left of the "Clean" button, below the book entries.
 - Provide an Export CSV button that generates a CSV file containing all book data
 - Disable the Export CSV button when there are no books to export
@@ -209,34 +155,22 @@ The application shall:
 - Support quoted fields with escaped quotes in CSV parsing
 - Skip incomplete rows during CSV import if they have fewer columns than expected
 
----
-
-## REQ0032: Page Description and Prerequisites
-The application shall:
+### REQ0032: Page Description and Prerequisites
 - Display a descriptive title "YouTube Audiobook Script Generator" at the top of the page
 - Provide a description explaining what the application does and its purpose
 - List prerequisites (yt-dlp and ffmpeg) with instructions that they must be installed and available in system PATH
 - Display the description and prerequisites in a clearly formatted section above the book entries
 
----
-
-## REQ0033: Add Book Button and Clean Button Grouping
-The application shall:
+### REQ0033: Add Book Button and Clean Button Grouping
 - Provide an "Add New Book" button and a "Clean" button grouped together with the CSV Import/Export buttons below the book entries, aligned to the right.
 - Match the button style to the Material UI theme.
 - Display the buttons in a flex container.
 
----
-
-## REQ0034: Image Host Configuration
-The application shall:
+### REQ0034: Image Host Configuration
 - Configure `next.config.ts` to allow images from `img.youtube.com` via `remotePatterns`.
 - Ensure proper loading and display of YouTube thumbnails.
 
----
-
-## REQ0035: Book Entry Table View
-The application shall:
+### REQ0035: Book Entry Table View
 - Display book entries in a scrollable table format.
 - Each row in the table will represent a book entry.
 - The table will have columns for Thumbnail, YouTube URL, Title, Author, Narrator, Series, Series #, Year, and Actions.
@@ -244,19 +178,14 @@ The application shall:
 - Allow inline editing of book details directly within the table cells.
 - Provide an action column with a button to remove individual book entries.
 
----
+### REQ0036: Text Input Transformations
+- Provide an edit dropdown for all user-editable text inputs (e.g., in book entries and filename template) with the following text manipulation actions:
+  - **Sentence case**: Capitalizes the first letter of the first word in a sentence and converts the rest to lowercase.
+  - **Name Case**: Capitalizes the first letter of each word.
+  - **UPPERCASE**: Converts all characters to uppercase.
+  - **lowercase**: Converts all characters to lowercase.
 
-## REQ0036: Text Input Transformations
-The application shall provide an edit dropdown for all user-editable text inputs (e.g., in book entries and filename template) with the following text manipulation actions:
-- **Sentence case**: Capitalizes the first letter of the first word in a sentence and converts the rest to lowercase.
-- **Name Case**: Capitalizes the first letter of each word.
-- **UPPERCASE**: Converts all characters to uppercase.
-- **lowercase**: Converts all characters to lowercase.
-
----
-
-## REQ0037: YouTube Metadata Auto-Fetch
-The application shall:
+### REQ0037: YouTube Metadata Auto-Fetch
 - Automatically fetch video metadata (title and author/channel name) from YouTube when a valid YouTube URL is entered
 - Fetch metadata using YouTube's oEmbed API endpoint without requiring API keys
 - Display a loading indicator while fetching metadata
