@@ -91,10 +91,61 @@ export function BookTable({ books, onBooksChange, onThumbnailClick }: BookTableP
       const diff = e.clientX - resizeStartX;
       const newWidth = Math.max(50, resizeStartWidth + diff);
       const currentWidths = useAppStore.getState().columnWidths || {};
-      setColumnWidths({
-        ...currentWidths,
-        [resizingColumn]: newWidth,
+      
+      // Calculate current total width
+      const defaultTotal = Object.values(DEFAULT_COLUMN_WIDTHS).reduce((sum, width) => sum + width, 0);
+      const allColumnKeys = Object.keys(DEFAULT_COLUMN_WIDTHS);
+      
+      // Get current widths for all columns, using defaults if not set
+      const allCurrentWidths: Record<string, number> = {};
+      let currentTotal = 0;
+      allColumnKeys.forEach((key) => {
+        const width = currentWidths[key] || DEFAULT_COLUMN_WIDTHS[key] || 150;
+        allCurrentWidths[key] = width;
+        currentTotal += width;
       });
+      
+      // Update the resized column
+      const oldTotal = currentTotal;
+      const newTotal = oldTotal - resizeStartWidth + newWidth;
+      
+      // Normalize all widths to maintain the default total while preserving proportions
+      // This ensures the table always fits within 100% width
+      const normalizedWidths: Record<string, number> = {};
+      
+      if (newTotal <= defaultTotal) {
+        // If new total is within limits, just update the resized column
+        normalizedWidths[resizingColumn] = newWidth;
+        allColumnKeys.forEach((key) => {
+          if (key !== resizingColumn) {
+            normalizedWidths[key] = allCurrentWidths[key];
+          }
+        });
+      } else {
+        // If new total exceeds limits, scale all columns proportionally
+        normalizedWidths[resizingColumn] = newWidth;
+        const remainingWidth = defaultTotal - newWidth;
+        const otherColumnsTotal = oldTotal - resizeStartWidth;
+        
+        if (otherColumnsTotal > 0) {
+          const scaleFactor = remainingWidth / otherColumnsTotal;
+          allColumnKeys.forEach((key) => {
+            if (key !== resizingColumn) {
+              const scaledWidth = allCurrentWidths[key] * scaleFactor;
+              normalizedWidths[key] = Math.max(50, scaledWidth);
+            }
+          });
+        } else {
+          // Fallback: distribute remaining width equally
+          const otherColumns = allColumnKeys.filter(k => k !== resizingColumn);
+          const equalWidth = remainingWidth / otherColumns.length;
+          otherColumns.forEach((key) => {
+            normalizedWidths[key] = Math.max(50, equalWidth);
+          });
+        }
+      }
+      
+      setColumnWidths(normalizedWidths);
     };
 
     const handleMouseUp = (): void => {
@@ -151,6 +202,7 @@ export function BookTable({ books, onBooksChange, onThumbnailClick }: BookTableP
           userSelect: 'none',
           bgcolor: 'primary.main',
           color: 'primary.contrastText',
+          fontWeight: 'bold',
           '&:hover .resize-handle': {
             bgcolor: 'primary.light',
           },
@@ -233,9 +285,9 @@ export function BookTable({ books, onBooksChange, onThumbnailClick }: BookTableP
   };
 
   return (
-    <Box sx={{ width: '100%', overflowX: 'hidden' }}>
-      <TableContainer component={Paper} sx={{ width: '100%', overflowX: 'hidden' }}>
-        <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
+    <Box sx={{ width: '100%', overflowX: 'hidden', maxWidth: 'none', p: 2 }}>
+      <TableContainer component={Paper} sx={{ width: '100%', maxWidth: 'none', overflowX: 'hidden', overflowY: 'visible', '& .MuiTableCell-root': { overflow: 'visible' } }}>
+        <Table sx={{ tableLayout: 'fixed', width: '100%', maxWidth: 'none' }}>
           <TableHead>
             <TableRow>
             {renderResizableHeader('preview', 'Preview')}
@@ -327,7 +379,7 @@ export function BookTable({ books, onBooksChange, onThumbnailClick }: BookTableP
           </TableBody>
         </Table>
       </TableContainer>
-      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1, width: '100%', maxWidth: 'none' }}>
         <Button
           variant="outlined"
           color="error"
