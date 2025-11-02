@@ -5,7 +5,7 @@ import { Typography, Box, Container, Paper, Stack } from '@mui/material';
 import '../infrastructure/di/container';
 import { useAppStore } from '../application/stores/app-store';
 import { usePersistStore } from '../application/stores/storage-store';
-import { BookTable } from '../components/book-table';
+import { BookList } from '../components/book-list';
 import { FilenameTemplateInput } from '../components/filename-template-input';
 import { GenerateScriptButton } from '../components/generate-script-button';
 import { Lightbox } from '../components/lightbox';
@@ -69,7 +69,7 @@ export default function Home() {
 
             {/* Book Table Section */}
             <Paper elevation={0} sx={{ bgcolor: 'background.paper', overflow: 'hidden' }}>
-              <BookTable
+              <BookList
                 books={books}
                 onBooksChange={setBooks}
                 onThumbnailClick={setLightboxImage}

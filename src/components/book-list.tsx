@@ -1,14 +1,10 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState } from 'react';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { BookDto } from '../application/dto/book-dto';
-import { useAppStore } from '../application/stores/app-store';
-import { useBookTable } from '../hooks/use-book-table';
-import { EditableCell } from './editable-cell';
-import { ThumbnailCell } from './thumbnail-cell';
 import { CsvImportExport } from './csv-import-export';
 import { BookCard } from './book-card';
 
