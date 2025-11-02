@@ -1,4 +1,5 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { CookiesBrowser } from '../../application/stores/app-store';
 
 interface AppStateDb extends DBSchema {
   'app-state': {
@@ -6,6 +7,7 @@ interface AppStateDb extends DBSchema {
     value: {
       books: unknown[];
       filenameTemplate: string;
+      cookiesBrowser: CookiesBrowser;
       columnWidths: Record<string, number>;
     };
   };
@@ -41,6 +43,7 @@ export class IndexedDbStorageRepository {
   public async save(state: {
     books: unknown[];
     filenameTemplate: string;
+    cookiesBrowser: CookiesBrowser;
     columnWidths: Record<string, number>;
   }): Promise<void> {
     if (!this.db) {
@@ -62,6 +65,7 @@ export class IndexedDbStorageRepository {
   public async load(): Promise<{
     books: unknown[];
     filenameTemplate: string;
+    cookiesBrowser?: CookiesBrowser;
     columnWidths: Record<string, number>;
   } | null> {
     if (!this.db) {

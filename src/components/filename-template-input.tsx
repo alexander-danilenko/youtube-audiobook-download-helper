@@ -15,8 +15,8 @@ export function FilenameTemplateInput({ value, onChange }: FilenameTemplateInput
   };
 
   return (
-    <Box component="fieldset" sx={{ mb: 3, border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2 }}>
-      <Typography component="legend" variant="body2" sx={{ px: 1 }}>
+    <Box>
+      <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
         Filename Template
       </Typography>
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>

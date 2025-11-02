@@ -12,7 +12,8 @@ export class GenerateShellScriptUseCase {
   public execute(input: ScriptGenerationDto): ScriptGenerationResult {
     const scriptContent = this.scriptGenerator.generateScript(
       input.books,
-      input.filenameTemplate
+      input.filenameTemplate,
+      input.cookiesBrowser
     );
 
     return {
@@ -23,7 +24,8 @@ export class GenerateShellScriptUseCase {
   public executeDownloadString(input: ScriptGenerationDto): string {
     return this.scriptGenerator.generateDownloadString(
       input.books,
-      input.filenameTemplate
+      input.filenameTemplate,
+      input.cookiesBrowser
     );
   }
 }

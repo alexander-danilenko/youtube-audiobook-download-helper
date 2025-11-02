@@ -6,7 +6,7 @@ import '../infrastructure/di/container';
 import { useAppStore } from '../application/stores/app-store';
 import { usePersistStore } from '../application/stores/storage-store';
 import { BookList } from '../components/book-list';
-import { FilenameTemplateInput } from '../components/filename-template-input';
+import { Settings } from '../components/settings';
 import { GetDownloadCommandButton } from '../components/generate-script-button';
 import { Lightbox } from '../components/lightbox';
 import { AppHeader } from '../components/app-header';
@@ -18,8 +18,10 @@ export default function Home() {
   // Get state from store
   const books = useAppStore((state) => state.books);
   const filenameTemplate = useAppStore((state) => state.filenameTemplate);
+  const cookiesBrowser = useAppStore((state) => state.cookiesBrowser);
   const setBooks = useAppStore((state) => state.setBooks);
   const setFilenameTemplate = useAppStore((state) => state.setFilenameTemplate);
+  const setCookiesBrowser = useAppStore((state) => state.setCookiesBrowser);
 
   // Local UI state (not persisted)
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
@@ -70,7 +72,12 @@ export default function Home() {
             {/* Script Generation Section */}
             <Paper elevation={0} sx={{ p: 3, bgcolor: 'background.paper' }}>
               <Stack spacing={2}>
-                <FilenameTemplateInput value={filenameTemplate} onChange={setFilenameTemplate} />
+                <Settings
+                  filenameTemplate={filenameTemplate}
+                  cookiesBrowser={cookiesBrowser}
+                  onFilenameTemplateChange={setFilenameTemplate}
+                  onCookiesBrowserChange={setCookiesBrowser}
+                />
                 <Alert severity="warning">
                   <Link href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener noreferrer" underline="hover">
                     yt-dlp
@@ -81,7 +88,7 @@ export default function Home() {
                   </Link>
                   {' '}need to be installed in order for the script to work.
                 </Alert>
-                <GetDownloadCommandButton books={books} filenameTemplate={filenameTemplate} />
+                <GetDownloadCommandButton books={books} filenameTemplate={filenameTemplate} cookiesBrowser={cookiesBrowser} />
               </Stack>
             </Paper>
           </Stack>

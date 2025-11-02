@@ -4,14 +4,16 @@ import { useState } from 'react';
 import { Button, Box, Snackbar, Alert } from '@mui/material';
 import { ContentCopy as ContentCopyIcon } from '@mui/icons-material';
 import { BookDto } from '../application/dto/book-dto';
+import { CookiesBrowser } from '../application/stores/app-store';
 import { useScriptGenerator } from '../hooks/use-script-generator';
 
 interface GetDownloadCommandButtonProps {
   books: BookDto[];
   filenameTemplate: string;
+  cookiesBrowser: CookiesBrowser;
 }
 
-export function GetDownloadCommandButton({ books, filenameTemplate }: GetDownloadCommandButtonProps) {
+export function GetDownloadCommandButton({ books, filenameTemplate, cookiesBrowser }: GetDownloadCommandButtonProps) {
   const { copyDownloadString } = useScriptGenerator();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
@@ -26,7 +28,7 @@ export function GetDownloadCommandButton({ books, filenameTemplate }: GetDownloa
     }
 
     try {
-      await copyDownloadString(validBooks, filenameTemplate);
+      await copyDownloadString(validBooks, filenameTemplate, cookiesBrowser);
       setSnackbarOpen(true);
     } catch (error) {
       alert('Failed to copy to clipboard. Please try again.');

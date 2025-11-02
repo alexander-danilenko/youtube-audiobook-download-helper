@@ -3,15 +3,17 @@ import { container } from '../infrastructure/di/container';
 import { GenerateShellScriptUseCase } from '../application/use-cases/generate-shell-script-use-case';
 import { BookDto } from '../application/dto/book-dto';
 
+import { CookiesBrowser } from '../application/stores/app-store';
+
 export function useScriptGenerator() {
-  const generateScript = useCallback((books: BookDto[], filenameTemplate: string): string => {
+  const generateScript = useCallback((books: BookDto[], filenameTemplate: string, cookiesBrowser: CookiesBrowser): string => {
     const useCase = container.resolve(GenerateShellScriptUseCase);
-    const result = useCase.execute({ books, filenameTemplate });
+    const result = useCase.execute({ books, filenameTemplate, cookiesBrowser });
     return result.scriptContent;
   }, []);
 
-  const downloadScript = useCallback((books: BookDto[], filenameTemplate: string) => {
-    const scriptContent = generateScript(books, filenameTemplate);
+  const downloadScript = useCallback((books: BookDto[], filenameTemplate: string, cookiesBrowser: CookiesBrowser) => {
+    const scriptContent = generateScript(books, filenameTemplate, cookiesBrowser);
     const blob = new Blob([scriptContent], { type: 'text/x-sh' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -23,9 +25,9 @@ export function useScriptGenerator() {
     URL.revokeObjectURL(url);
   }, [generateScript]);
 
-  const copyDownloadString = useCallback(async (books: BookDto[], filenameTemplate: string): Promise<void> => {
+  const copyDownloadString = useCallback(async (books: BookDto[], filenameTemplate: string, cookiesBrowser: CookiesBrowser): Promise<void> => {
     const useCase = container.resolve(GenerateShellScriptUseCase);
-    const downloadString = useCase.executeDownloadString({ books, filenameTemplate });
+    const downloadString = useCase.executeDownloadString({ books, filenameTemplate, cookiesBrowser });
     
     try {
       await navigator.clipboard.writeText(downloadString);

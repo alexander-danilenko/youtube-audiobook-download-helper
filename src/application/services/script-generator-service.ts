@@ -1,27 +1,29 @@
 import { BookDto } from '../dto/book-dto';
+import { CookiesBrowser } from '../stores/app-store';
 
 export class ScriptGeneratorService {
   private readonly defaultTemplate = '$author - [$series - $series_num] - $title [$narrator].%(ext)s';
 
-  public generateScript(books: BookDto[], filenameTemplate: string): string {
+  public generateScript(books: BookDto[], filenameTemplate: string, cookiesBrowser: CookiesBrowser): string {
     const template = filenameTemplate || this.defaultTemplate;
-    const commands = books.map((book) => this.generateCommand(book, template));
+    const commands = books.map((book) => this.generateCommand(book, template, cookiesBrowser));
     return commands.join('\n\n');
   }
 
-  public generateDownloadString(books: BookDto[], filenameTemplate: string): string {
+  public generateDownloadString(books: BookDto[], filenameTemplate: string, cookiesBrowser: CookiesBrowser): string {
     const template = filenameTemplate || this.defaultTemplate;
-    const commands = books.map((book) => this.generateOneLineCommand(book, template));
+    const commands = books.map((book) => this.generateOneLineCommand(book, template, cookiesBrowser));
     return commands.join('; ');
   }
 
-  private generateCommand(book: BookDto, template: string): string {
+  private generateCommand(book: BookDto, template: string, cookiesBrowser: CookiesBrowser): string {
     const filename = this.processFilenameTemplate(book, template);
     const escapedFilename = this.escapeShellString(filename);
     const escapedUrl = this.escapeShellString(book.url);
+    const cookiesOption = cookiesBrowser !== 'none' ? `  --cookies-from-browser "${cookiesBrowser}" \\\n` : '';
 
     return `yt-dlp --extract-audio --audio-format m4a --embed-chapters --embed-metadata \\
-  --embed-thumbnail --convert-thumbnails jpg \\
+  --embed-thumbnail --convert-thumbnails jpg \\${cookiesOption}
   --replace-in-metadata "genre" ".*" "Audiobook" \\
   --parse-metadata "${this.escapeShellString(book.title)}:%(title)s" \\
   --parse-metadata "${this.escapeShellString(book.author)}:%(artist)s" \\
@@ -33,12 +35,13 @@ export class ScriptGeneratorService {
   "${escapedUrl}"`;
   }
 
-  private generateOneLineCommand(book: BookDto, template: string): string {
+  private generateOneLineCommand(book: BookDto, template: string, cookiesBrowser: CookiesBrowser): string {
     const filename = this.processFilenameTemplate(book, template);
     const escapedFilename = this.escapeShellString(filename);
     const escapedUrl = this.escapeShellString(book.url);
+    const cookiesOption = cookiesBrowser !== 'none' ? ` --cookies-from-browser "${cookiesBrowser}"` : '';
 
-    return `yt-dlp --extract-audio --audio-format m4a --embed-chapters --embed-metadata --embed-thumbnail --convert-thumbnails jpg --replace-in-metadata "genre" ".*" "Audiobook" --parse-metadata "${this.escapeShellString(book.title)}:%(title)s" --parse-metadata "${this.escapeShellString(book.author)}:%(artist)s" --parse-metadata "${this.escapeShellString(book.series || '')}:%(album)s" --parse-metadata "${this.escapeShellString(book.narrator)}:%(composer)s" --parse-metadata "${book.seriesNumber}:%(track_number)s" --postprocessor-args "ffmpeg:-c:a copy" -o "${escapedFilename}" "${escapedUrl}"`;
+    return `yt-dlp --extract-audio --audio-format m4a --embed-chapters --embed-metadata --embed-thumbnail --convert-thumbnails jpg${cookiesOption} --replace-in-metadata "genre" ".*" "Audiobook" --parse-metadata "${this.escapeShellString(book.title)}:%(title)s" --parse-metadata "${this.escapeShellString(book.author)}:%(artist)s" --parse-metadata "${this.escapeShellString(book.series || '')}:%(album)s" --parse-metadata "${this.escapeShellString(book.narrator)}:%(composer)s" --parse-metadata "${book.seriesNumber}:%(track_number)s" --postprocessor-args "ffmpeg:-c:a copy" -o "${escapedFilename}" "${escapedUrl}"`;
   }
 
   private processFilenameTemplate(book: BookDto, template: string): string {

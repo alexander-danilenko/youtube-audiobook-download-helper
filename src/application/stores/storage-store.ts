@@ -11,6 +11,7 @@ export function usePersistStore(): boolean {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const books = useAppStore((state) => state.books);
   const filenameTemplate = useAppStore((state) => state.filenameTemplate);
+  const cookiesBrowser = useAppStore((state) => state.cookiesBrowser);
   const columnWidths = useAppStore((state) => state.columnWidths);
 
   // Initialize and load from IndexedDB on mount
@@ -28,6 +29,7 @@ export function usePersistStore(): boolean {
           useAppStore.setState({
             books: savedState.books as AppState['books'],
             filenameTemplate: savedState.filenameTemplate,
+            cookiesBrowser: savedState.cookiesBrowser || 'none',
             columnWidths: savedState.columnWidths,
           });
         }
@@ -57,6 +59,7 @@ export function usePersistStore(): boolean {
         await storageRepo.save({
           books,
           filenameTemplate,
+          cookiesBrowser,
           columnWidths,
         });
       } catch (error) {
@@ -72,7 +75,7 @@ export function usePersistStore(): boolean {
         saveTimeoutRef.current = null;
       }
     };
-  }, [books, filenameTemplate, columnWidths]);
+  }, [books, filenameTemplate, cookiesBrowser, columnWidths]);
 
   return isHydrated;
 }
