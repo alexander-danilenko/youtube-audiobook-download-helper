@@ -79,7 +79,7 @@ export function BookTable({ books, onBooksChange, onThumbnailClick }: BookTableP
     e.stopPropagation();
     setResizingColumn(columnKey);
     setResizeStartX(e.clientX);
-    setResizeStartWidth(columnWidths[columnKey] || DEFAULT_COLUMN_WIDTHS[columnKey] || 150);
+    setResizeStartWidth(columnWidths?.[columnKey] || DEFAULT_COLUMN_WIDTHS[columnKey] || 150);
   }, [columnWidths]);
 
   useEffect(() => {
@@ -90,7 +90,7 @@ export function BookTable({ books, onBooksChange, onThumbnailClick }: BookTableP
     const handleMouseMove = (e: MouseEvent): void => {
       const diff = e.clientX - resizeStartX;
       const newWidth = Math.max(50, resizeStartWidth + diff);
-      const currentWidths = useAppStore.getState().columnWidths;
+      const currentWidths = useAppStore.getState().columnWidths || {};
       setColumnWidths({
         ...currentWidths,
         [resizingColumn]: newWidth,
@@ -125,13 +125,13 @@ export function BookTable({ books, onBooksChange, onThumbnailClick }: BookTableP
   ];
 
   const calculateTotalWidth = useCallback((): number => {
-    const total = Object.values(columnWidths).reduce((sum, width) => sum + width, 0);
+    const total = columnWidths ? Object.values(columnWidths).reduce((sum, width) => sum + width, 0) : 0;
     const defaultsTotal = Object.values(DEFAULT_COLUMN_WIDTHS).reduce((sum, width) => sum + width, 0);
     return total > 0 ? total : defaultsTotal;
   }, [columnWidths]);
 
   const getColumnWidthPercent = useCallback((columnKey: string): number => {
-    const width = columnWidths[columnKey] || DEFAULT_COLUMN_WIDTHS[columnKey] || 150;
+    const width = columnWidths?.[columnKey] || DEFAULT_COLUMN_WIDTHS[columnKey] || 150;
     const totalWidth = calculateTotalWidth();
     return (width / totalWidth) * 100;
   }, [columnWidths, calculateTotalWidth]);
