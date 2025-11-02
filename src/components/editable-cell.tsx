@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { TextField } from '@mui/material';
+import { TextField, InputAdornment } from '@mui/material';
+import { TextTransformMenu } from './text-transform-menu';
 
 interface EditableCellProps {
   value: string | number | undefined;
@@ -35,6 +36,16 @@ export const EditableCell: React.FC<EditableCellProps> = ({ value, onChange, lab
       variant="outlined"
       size="small"
       fullWidth
+      InputProps={{
+        endAdornment: (
+          <InputAdornment position="end">
+            <TextTransformMenu
+              currentText={String(localValue || '')}
+              onTransform={(transformedText) => setLocalValue(transformedText)}
+            />
+          </InputAdornment>
+        ),
+      }}
     />
   );
 };

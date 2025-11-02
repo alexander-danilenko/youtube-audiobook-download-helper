@@ -1,7 +1,8 @@
 'use client';
 
-import { TextField, FormHelperText, Box, Button, Typography } from '@mui/material';
+import { TextField, FormHelperText, Box, Button, Typography, InputAdornment } from '@mui/material';
 import { DEFAULT_FILENAME_TEMPLATE } from '../application/stores/app-store';
+import { TextTransformMenu } from './text-transform-menu';
 
 interface FilenameTemplateInputProps {
   value: string;
@@ -27,6 +28,16 @@ export function FilenameTemplateInput({ value, onChange }: FilenameTemplateInput
           fullWidth
           variant="outlined"
           size="small"
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <TextTransformMenu
+                  currentText={value}
+                  onTransform={onChange}
+                />
+              </InputAdornment>
+            ),
+          }}
         />
         <Button
           onClick={handleReset}

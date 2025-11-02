@@ -1,11 +1,12 @@
 'use client';
 
-import { TextField, Box, Paper, Typography, IconButton } from '@mui/material';
+import { TextField, Box, Paper, Typography, IconButton, InputAdornment } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { BookDto } from '../application/dto/book-dto';
 import { useThumbnail } from '../hooks/use-thumbnail';
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
+import { TextTransformMenu } from './text-transform-menu';
 
 interface BookCardProps {
   book: BookDto;
@@ -62,6 +63,16 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick }: Boo
           fullWidth
           variant="outlined"
           size="small"
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <TextTransformMenu
+                  currentText={localBook.url || ''}
+                  onTransform={(transformedText) => handleChange('url', transformedText)}
+                />
+              </InputAdornment>
+            ),
+          }}
         />
         <IconButton onClick={onRemove} color="error" aria-label="remove book" sx={{ flexShrink: 0 }}>
           <DeleteIcon />
@@ -74,6 +85,16 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick }: Boo
         fullWidth
         variant="outlined"
         size="small"
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <TextTransformMenu
+                currentText={localBook.title || ''}
+                onTransform={(transformedText) => handleChange('title', transformedText)}
+              />
+            </InputAdornment>
+          ),
+        }}
       />
       <TextField
         label="Author"
@@ -82,6 +103,16 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick }: Boo
         fullWidth
         variant="outlined"
         size="small"
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <TextTransformMenu
+                currentText={localBook.author || ''}
+                onTransform={(transformedText) => handleChange('author', transformedText)}
+              />
+            </InputAdornment>
+          ),
+        }}
       />
       <TextField
         label="Narrator"
@@ -90,6 +121,16 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick }: Boo
         fullWidth
         variant="outlined"
         size="small"
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <TextTransformMenu
+                currentText={localBook.narrator || ''}
+                onTransform={(transformedText) => handleChange('narrator', transformedText)}
+              />
+            </InputAdornment>
+          ),
+        }}
       />
       <Box sx={{ display: 'flex', gap: 2 }}>
         <TextField
@@ -99,6 +140,16 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick }: Boo
           fullWidth
           variant="outlined"
           size="small"
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <TextTransformMenu
+                  currentText={localBook.series || ''}
+                  onTransform={(transformedText) => handleChange('series', transformedText)}
+                />
+              </InputAdornment>
+            ),
+          }}
         />
         <TextField
           label="Series #"

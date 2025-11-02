@@ -244,3 +244,12 @@ The application shall:
 - Allow inline editing of book details directly within the table cells.
 - Provide an action column with a button to remove individual book entries.
 
+---
+
+## REQ0036: Text Input Transformations
+The application shall provide an edit dropdown for all user-editable text inputs (e.g., in book entries and filename template) with the following text manipulation actions:
+- **Sentence case**: Capitalizes the first letter of the first word in a sentence and converts the rest to lowercase.
+- **Name Case**: Capitalizes the first letter of each word.
+- **UPPERCASE**: Converts all characters to uppercase.
+- **lowercase**: Converts all characters to lowercase.
+
