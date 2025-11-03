@@ -15,7 +15,7 @@ export function AppHeader() {
 
   const handleLanguageChange = (newLang: Language): void => {
     const currentPath = window.location.pathname;
-    const newPath = currentPath.replace(/^\/(en|ukr)/, `/${newLang}`);
+    const newPath = currentPath.replace(/^\/(en|ukr)/, `../${newLang}`);
     router.push(newPath);
   };
 
