@@ -1,6 +1,7 @@
 {
   "app_title": "YT Audiobook Downloader",
   "app_subtitle": "Generate shell script for downloading YouTube audiobooks with yt-dlp",
+  "page_description_heading": "📚🎧⚡ Quick & Easy Audiobook Downloads",
   "introduction_paragraph_1": "Downloading audiobooks from YouTube and adding metadata like title, author, chapters, and cover art takes time. This browser-based tool prepares a list of YouTube video links and book details, then generates a script that handles everything automatically.",
   "introduction_paragraph_2": "For each video link, you enter book information: title, author, narrator, series, and year. The app generates a script that uses {ytdlp} to {downloadAudio}. Then {ffmpeg} embeds the metadata, adds chapter markers (if available), and incorporates cover art into the audio files.",
   "introduction_ytdlp": "yt-dlp",
@@ -47,7 +48,7 @@
   "script_generation_warning_text": "You need to have {ytdlpLink} and {ffmpegLink} need to be installed in order for the script to work.",
   "script_generation_get_download_command": "Get Download Command",
   "script_generation_copy_success": "Download command copied to clipboard!",
-  "script_generation_error_no_books": "Please add at least one book with URL, title, author, and narrator.",
+  "script_generation_error_no_books": "Please add at least one book with URL, title and author.",
   "script_generation_error_copy_failed": "Failed to copy to clipboard. Please try again.",
   "csv_export": "Export CSV",
   "csv_import": "Import CSV",

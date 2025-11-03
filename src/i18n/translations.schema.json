@@ -6,6 +6,7 @@
   "properties": {
     "app_title": { "type": "string" },
     "app_subtitle": { "type": "string" },
+    "page_description_heading": { "type": "string" },
     "introduction_paragraph_1": { "type": "string" },
     "introduction_paragraph_2": { "type": "string" },
     "introduction_ytdlp": { "type": "string" },
@@ -70,6 +71,7 @@
   "required": [
     "app_title",
     "app_subtitle",
+    "page_description_heading",
     "introduction_paragraph_1",
     "introduction_paragraph_2",
     "introduction_ytdlp",

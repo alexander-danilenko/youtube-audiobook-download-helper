@@ -63,6 +63,9 @@ export default function Home() {
             {/* Introduction Section */}
             <Paper elevation={0} sx={{ p: 3, bgcolor: 'background.paper' }}>
               <Stack spacing={2}>
+                <Typography variant="h4" component="h2" sx={{ fontWeight: 600, mb: 1 }}>
+                  {t('page_description_heading')}
+                </Typography>
                 <Typography variant="body1">
                   {t('introduction_paragraph_1')}
                 </Typography>
