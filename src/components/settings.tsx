@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Typography, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Stack } from '@mui/material';
+import { Typography, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Stack } from '@mui/material';
 import { FilenameTemplateInput } from './filename-template-input';
 import { CookiesBrowser } from '../application/stores/app-store';
 import { useTranslation } from '../i18n/use-translation';
@@ -21,11 +21,11 @@ export function Settings({ filenameTemplate, cookiesBrowser, onFilenameTemplateC
   };
 
   return (
-    <Box component="fieldset" sx={{ mb: 3, border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2 }}>
-      <Typography component="legend" variant="body2" sx={{ px: 1 }}>
+    <Stack spacing={3}>
+      <Typography variant="h6" component="h2" sx={{ fontWeight: 500 }}>
         {t('settings_title')}
       </Typography>
-      <Stack spacing={2} sx={{ mt: 2 }}>
+      <Stack spacing={2}>
         <FilenameTemplateInput value={filenameTemplate} onChange={onFilenameTemplateChange} />
         
         <FormControl fullWidth size="small">
@@ -48,7 +48,7 @@ export function Settings({ filenameTemplate, cookiesBrowser, onFilenameTemplateC
           {t('settings_cookies_browser_helper')}
         </Typography>
       </Stack>
-    </Box>
+    </Stack>
   );
 }
 

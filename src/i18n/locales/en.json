@@ -1,5 +1,5 @@
 {
-  "app_title": "YT Audiobook Download Helper",
+  "app_title": "YouTube Audiobook Download Helper",
   "app_subtitle": "Build download list in web, download with yt-dlp",
   "page_description_heading": "📚🎧⚡ Quick & Easy Audiobook Downloads",
   "introduction_paragraph_1": "Downloading audiobooks from YouTube and adding metadata like title, author, chapters, and cover art takes time. This browser-based tool prepares a list of YouTube video links and book details, then generates a script that handles everything automatically.",
@@ -63,5 +63,8 @@
   "text_transform_uppercase": "UPPERCASE",
   "text_transform_lowercase": "lowercase",
   "theme_switch_to_dark": "Switch to dark mode",
-  "theme_switch_to_light": "Switch to light mode"
+  "theme_switch_to_light": "Switch to light mode",
+  "footer_copyright": "© {year} YouTube Audiobook Download Helper. All rights reserved.",
+  "footer_link_github": "GitHub",
+  "footer_disclaimer": "This tool is provided as-is. Use at your own risk. Always respect copyright and YouTube's terms of service and your mom."
 }

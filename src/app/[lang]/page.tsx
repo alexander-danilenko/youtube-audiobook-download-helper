@@ -10,6 +10,7 @@ import { Settings } from '../../components/settings';
 import { GetDownloadCommandButton } from '../../components/generate-script-button';
 import { Lightbox } from '../../components/lightbox';
 import { AppHeader } from '../../components/app-header';
+import { AppFooter } from '../../components/app-footer';
 import { useTranslation } from '../../i18n/use-translation';
 import { useLanguageStore } from '../../i18n/language-store';
 import { useParams, useRouter } from 'next/navigation';
@@ -166,15 +167,19 @@ export default function Home() {
               />
             </Paper>
 
+            {/* Settings Section */}
+            <Paper elevation={0} sx={{ p: 3, bgcolor: 'background.paper' }}>
+              <Settings
+                filenameTemplate={filenameTemplate}
+                cookiesBrowser={cookiesBrowser}
+                onFilenameTemplateChange={setFilenameTemplate}
+                onCookiesBrowserChange={setCookiesBrowser}
+              />
+            </Paper>
+
             {/* Script Generation Section */}
             <Paper elevation={0} sx={{ p: 3, bgcolor: 'background.paper' }}>
               <Stack spacing={2}>
-                <Settings
-                  filenameTemplate={filenameTemplate}
-                  cookiesBrowser={cookiesBrowser}
-                  onFilenameTemplateChange={setFilenameTemplate}
-                  onCookiesBrowserChange={setCookiesBrowser}
-                />
                 <Alert severity="warning">
                   <strong>{t('script_generation_warning')}</strong>: {t('script_generation_warning_text', {
                     ytdlpLink: (
@@ -195,6 +200,8 @@ export default function Home() {
           </Stack>
         </Container>
       </Box>
+
+      <AppFooter />
 
       <Lightbox imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} />
     </Box>

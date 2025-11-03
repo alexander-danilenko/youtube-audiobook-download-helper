@@ -1,6 +1,7 @@
 'use client';
 
-import { AppBar, Typography, Box, Container, Select, MenuItem, FormControl } from '@mui/material';
+import { AppBar, Typography, Box, Container, Select, MenuItem, FormControl, IconButton } from '@mui/material';
+import { GitHub as GitHubIcon } from '@mui/icons-material';
 import { useTranslation } from '../i18n/use-translation';
 import { useRouter, useParams } from 'next/navigation';
 import { Language } from '../i18n/translations';
@@ -43,6 +44,21 @@ export function AppHeader() {
             </Box>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <IconButton
+              component="a"
+              href="https://github.com/alexander-danilenko/youtube-audiobook-download-helper"
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                color: 'inherit',
+                '&:hover': {
+                  bgcolor: 'rgba(255, 255, 255, 0.1)',
+                },
+              }}
+              aria-label="GitHub"
+            >
+              <GitHubIcon />
+            </IconButton>
             <ThemeSwitcher />
             <FormControl size="small" sx={{ minWidth: 120 }}>
               <Select
