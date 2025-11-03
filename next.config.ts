@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { themeColors } from "./src/config/theme";
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -16,13 +15,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Theme colors are configured in src/config/theme.ts
-  // Access via: import { themeColors } from './src/config/theme'
-};
-
-// Re-export theme colors for convenience
-export const theme = {
-  colors: themeColors,
+  // Theme is configured in src/app/theme-provider.tsx
+  // Components should use useTheme() hook to access theme values
 };
 
 export default nextConfig;

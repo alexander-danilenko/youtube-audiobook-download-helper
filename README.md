@@ -1,4 +1,4 @@
-# YouTube Audiobook Downloader
+# YouTube Audiobook Download Helper
 
 This project is a Next.js application designed to help users download YouTube videos as audiobooks. It leverages `yt-dlp` for extracting audio and provides a user-friendly interface for managing downloads.
 

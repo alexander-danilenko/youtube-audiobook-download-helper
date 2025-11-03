@@ -6,8 +6,8 @@ import { CssBaseline } from "@mui/material";
 import { Language } from "../../i18n/translations";
 
 export const metadata: Metadata = {
-  title: "YT Audiobook Downloader",
-  description: "Generate shell scripts for downloading YouTube audiobooks with yt-dlp",
+  title: "YT Audiobook Download Helper",
+  description: "Build download list in web, download with yt-dlp",
 };
 
 export default function LangLayout({

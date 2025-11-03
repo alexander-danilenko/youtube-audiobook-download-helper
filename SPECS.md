@@ -1,7 +1,7 @@
-# YT Audiobook Downloader - Requirements Specification
+# YT Audiobook Download Helper - Requirements Specification
 
 ## Overview
-This document defines the functional requirements for the YT Audiobook Downloader application. Each requirement is assigned a unique identifier (REQ####) for tracking and processing.
+This document defines the functional requirements for the YT Audiobook Download Helper application. Each requirement is assigned a unique identifier (REQ####) for tracking and processing.
 
 ---
 
@@ -150,7 +150,7 @@ This document defines the functional requirements for the YT Audiobook Downloade
 - Skip incomplete rows during CSV import if they have fewer columns than expected
 
 ### REQ0032: Page Description and Prerequisites
-- Display a descriptive title "YT Audiobook Downloader" at the top of the page
+- Display a descriptive title "YT Audiobook Download Helper" at the top of the page
 - Provide a description explaining what the application does and its purpose
 - List prerequisites (yt-dlp and ffmpeg) with instructions that they must be installed and available in system PATH
 - Display the description and prerequisites in a clearly formatted section above the book entries
@@ -201,4 +201,19 @@ This document defines the functional requirements for the YT Audiobook Downloade
 - Translation files must be located in `src/i18n/locales/` directory (e.g., `en.json`, `ukr.json`)
 - Translation system must support placeholder replacement for dynamic content (e.g., `{variable}` syntax)
 - Language state must be synchronized between URL, localStorage, and application state
+
+### REQ0041: Color Theme Switcher
+- Provide a theme switcher button in the application header that allows users to toggle between light and dark color themes
+- Display a sun icon (Brightness7) when in light mode and a moon icon (Brightness4) when in dark mode (icon represents the current mode)
+- The button background and icon color must always be white (#FFFFFF), regardless of the current theme mode
+- Toggle theme mode when the button is clicked
+- Persist theme preference in browser localStorage under the key `app-theme`
+- Automatically detect and apply system color scheme preference on first visit if no stored preference exists
+- Use `prefers-color-scheme` media query to detect system preference (defaults to light mode if detection is unavailable)
+- Apply theme colors consistently across all application components (background, text, primary colors, etc.)
+- Provide tooltips on the theme switcher button that display translated text indicating the action (switch to dark mode / switch to light mode)
+- Include appropriate ARIA labels on the theme switcher button for accessibility
+- Use translation keys (`theme_switch_to_dark`, `theme_switch_to_light`) for all tooltip and ARIA label text to support internationalization
+- Update theme immediately upon toggle without requiring page refresh
+- Maintain theme state across page refreshes by restoring from localStorage
 

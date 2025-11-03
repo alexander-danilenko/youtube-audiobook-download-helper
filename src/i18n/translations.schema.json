@@ -66,7 +66,9 @@
     "text_transform_sentence_case": { "type": "string" },
     "text_transform_name_case": { "type": "string" },
     "text_transform_uppercase": { "type": "string" },
-    "text_transform_lowercase": { "type": "string" }
+    "text_transform_lowercase": { "type": "string" },
+    "theme_switch_to_dark": { "type": "string" },
+    "theme_switch_to_light": { "type": "string" }
   },
   "required": [
     "app_title",
@@ -131,7 +133,9 @@
     "text_transform_sentence_case",
     "text_transform_name_case",
     "text_transform_uppercase",
-    "text_transform_lowercase"
+    "text_transform_lowercase",
+    "theme_switch_to_dark",
+    "theme_switch_to_light"
   ],
   "additionalProperties": false
 }

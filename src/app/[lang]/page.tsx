@@ -105,6 +105,26 @@ export default function Home() {
                     color="secondary"
                     onClick={() => collapseAllBooks(books.map(book => book.id))}
                     disabled={books.length === 0}
+                    sx={{
+                      borderWidth: 2,
+                      '&.MuiButton-outlined': {
+                        borderColor: (theme) => theme.palette.mode === 'dark' 
+                          ? 'rgba(255, 255, 255, 0.5)' 
+                          : undefined,
+                        color: (theme) => theme.palette.mode === 'dark' 
+                          ? 'rgba(255, 255, 255, 0.9)' 
+                          : undefined,
+                        '&:hover': {
+                          borderWidth: 2,
+                          borderColor: (theme) => theme.palette.mode === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.8)' 
+                            : undefined,
+                          backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.1)' 
+                            : undefined,
+                        },
+                      },
+                    }}
                   >
                     {t('books_collapse_all')}
                   </Button>
@@ -114,6 +134,26 @@ export default function Home() {
                     color="secondary"
                     onClick={() => expandAllBooks(books.map(book => book.id))}
                     disabled={books.length === 0}
+                    sx={{
+                      borderWidth: 2,
+                      '&.MuiButton-outlined': {
+                        borderColor: (theme) => theme.palette.mode === 'dark' 
+                          ? 'rgba(255, 255, 255, 0.5)' 
+                          : undefined,
+                        color: (theme) => theme.palette.mode === 'dark' 
+                          ? 'rgba(255, 255, 255, 0.9)' 
+                          : undefined,
+                        '&:hover': {
+                          borderWidth: 2,
+                          borderColor: (theme) => theme.palette.mode === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.8)' 
+                            : undefined,
+                          backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.1)' 
+                            : undefined,
+                        },
+                      },
+                    }}
                   >
                     {t('books_expand_all')}
                   </Button>

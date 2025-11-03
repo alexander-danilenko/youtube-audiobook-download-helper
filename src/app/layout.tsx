@@ -5,8 +5,8 @@ import { ThemeProvider } from "./theme-provider";
 import { CssBaseline } from "@mui/material";
 
 export const metadata: Metadata = {
-  title: "YT Audiobook Downloader",
-  description: "Generate shell scripts for downloading YouTube audiobooks with yt-dlp",
+  title: "YT Audiobook Download Helper",
+  description: "Build download list in web, download with yt-dlp",
 };
 
 export default function RootLayout({

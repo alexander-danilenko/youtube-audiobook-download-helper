@@ -1,4 +1,4 @@
-# Project: YouTube Audiobook Downloader | Tech: Next.js + TypeScript | AI Agent Rules
+# Project: YouTube Audiobook Download Helper | Tech: Next.js + TypeScript | AI Agent Rules
 
 ## ARCHITECTURE PRINCIPLES (STRICT - ALWAYS FOLLOW)
 
