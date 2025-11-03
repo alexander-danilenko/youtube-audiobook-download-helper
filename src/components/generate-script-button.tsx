@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button, Box, Snackbar, Alert } from '@mui/material';
 import { ContentCopy as ContentCopyIcon } from '@mui/icons-material';
-import { BookDto } from '../application/dto/book-dto';
+import { BookDto, bookDtoSchema } from '../application/dto/book-dto';
 import { CookiesBrowser } from '../application/stores/app-store';
 import { useScriptGenerator } from '../hooks/use-script-generator';
 import { useTranslation } from '../i18n/use-translation';
@@ -18,46 +18,61 @@ export function GetDownloadCommandButton({ books, filenameTemplate, cookiesBrows
   const { t } = useTranslation();
   const { copyDownloadString } = useScriptGenerator();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
+  // Validate all books using zod schema
+  const validationResults = books.map((book) => ({
+    book,
+    result: bookDtoSchema.safeParse(book),
+  }));
+
+  const validBooks = validationResults.filter(({ result }) => result.success).map(({ book }) => book) as BookDto[];
+
+  const hasInvalidBooks = validationResults.some(({ result }) => !result.success);
+
+  const isDisabled = validBooks.length === 0 || hasInvalidBooks;
 
   const handleClick = async (): Promise<void> => {
-    const validBooks = books.filter(
-      (book) => book.url && book.title && book.author && book.narrator
-    );
-
-    if (validBooks.length === 0) {
-      alert(t('script_generation_error_no_books') as string);
-      return;
-    }
-
     try {
       await copyDownloadString(validBooks, filenameTemplate, cookiesBrowser);
+      setSnackbarMessage(t('script_generation_copy_success') as string);
+      setSnackbarSeverity('success');
       setSnackbarOpen(true);
-    } catch (error) {
-      alert(t('script_generation_error_copy_failed') as string);
+    } catch {
+      setSnackbarMessage(t('script_generation_error_copy_failed') as string);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     }
   };
 
   return (
     <>
-      <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+      <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
         <Button
           onClick={handleClick}
           variant="contained"
           color="primary"
           size="large"
           startIcon={<ContentCopyIcon />}
+          disabled={isDisabled}
         >
           {t('script_generation_get_download_command')}
         </Button>
+        {hasInvalidBooks && (
+          <Alert severity="error" sx={{ width: '100%', maxWidth: 600 }}>
+            {t('script_generation_error_invalid_books')}
+          </Alert>
+        )}
       </Box>
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={3000}
+        autoHideDuration={snackbarSeverity === 'error' ? 6000 : 3000}
         onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
-          {t('script_generation_copy_success')}
+        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
         </Alert>
       </Snackbar>
     </>

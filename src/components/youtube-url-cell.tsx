@@ -9,9 +9,10 @@ interface YouTubeUrlCellProps {
   value: string;
   onChange: (value: string) => void;
   onMetadataFetched?: (title: string, authorName: string) => void;
+  error?: boolean;
 }
 
-export const YouTubeUrlCell: React.FC<YouTubeUrlCellProps> = ({ value, onChange, onMetadataFetched }) => {
+export const YouTubeUrlCell: React.FC<YouTubeUrlCellProps> = ({ value, onChange, onMetadataFetched, error = false }) => {
   const [localValue, setLocalValue] = useState<string>(value);
   const { isLoading, fetchMetadata } = useYouTubeMetadata();
   const previousUrlRef = useRef<string>('');
@@ -109,6 +110,7 @@ export const YouTubeUrlCell: React.FC<YouTubeUrlCellProps> = ({ value, onChange,
       variant="outlined"
       size="small"
       fullWidth
+      error={error || !localValue?.trim()}
       InputProps={{
         endAdornment: (
           <InputAdornment position="end">

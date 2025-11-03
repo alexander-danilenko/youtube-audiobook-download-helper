@@ -28,7 +28,7 @@ export class ScriptGeneratorService {
   --parse-metadata "${this.escapeShellString(book.title)}:%(title)s" \\
   --parse-metadata "${this.escapeShellString(book.author)}:%(artist)s" \\
   --parse-metadata "${this.escapeShellString(book.series || '')}:%(album)s" \\
-  --parse-metadata "${this.escapeShellString(book.narrator)}:%(composer)s" \\
+  --parse-metadata "${this.escapeShellString(book.narrator || '')}:%(composer)s" \\
   --parse-metadata "${book.seriesNumber}:%(track_number)s" \\
   --postprocessor-args "ffmpeg:-c:a copy" \\
   -o "${escapedFilename}" \\
@@ -41,7 +41,7 @@ export class ScriptGeneratorService {
     const escapedUrl = this.escapeShellString(book.url);
     const cookiesOption = cookiesBrowser !== 'none' ? ` --cookies-from-browser "${cookiesBrowser}"` : '';
 
-    return `yt-dlp --extract-audio --audio-format m4a --embed-chapters --embed-metadata --embed-thumbnail --convert-thumbnails jpg${cookiesOption} --replace-in-metadata "genre" ".*" "Audiobook" --parse-metadata "${this.escapeShellString(book.title)}:%(title)s" --parse-metadata "${this.escapeShellString(book.author)}:%(artist)s" --parse-metadata "${this.escapeShellString(book.series || '')}:%(album)s" --parse-metadata "${this.escapeShellString(book.narrator)}:%(composer)s" --parse-metadata "${book.seriesNumber}:%(track_number)s" --postprocessor-args "ffmpeg:-c:a copy" -o "${escapedFilename}" "${escapedUrl}"`;
+    return `yt-dlp --extract-audio --audio-format m4a --embed-chapters --embed-metadata --embed-thumbnail --convert-thumbnails jpg${cookiesOption} --replace-in-metadata "genre" ".*" "Audiobook" --parse-metadata "${this.escapeShellString(book.title)}:%(title)s" --parse-metadata "${this.escapeShellString(book.author)}:%(artist)s" --parse-metadata "${this.escapeShellString(book.series || '')}:%(album)s" --parse-metadata "${this.escapeShellString(book.narrator || '')}:%(composer)s" --parse-metadata "${book.seriesNumber}:%(track_number)s" --postprocessor-args "ffmpeg:-c:a copy" -o "${escapedFilename}" "${escapedUrl}"`;
   }
 
   private processFilenameTemplate(book: BookDto, template: string): string {

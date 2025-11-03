@@ -5,10 +5,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { BookDto } from '../application/dto/book-dto';
+import { BookDto, bookDtoSchema } from '../application/dto/book-dto';
 import { useThumbnail } from '../hooks/use-thumbnail';
 import { useYouTubeMetadata } from '../hooks/use-youtube-metadata';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import { TextTransformMenu } from './text-transform-menu';
 import { useAppStore } from '../application/stores/app-store';
@@ -31,62 +31,64 @@ interface MetadataComparison {
 export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipAutoMetadataFetch = false }: BookCardProps) {
   const { t } = useTranslation();
   const tString = useTranslationString();
-  const [localBook, setLocalBook] = useState<BookDto>(book);
   const { thumbnailUrl, fullSizeThumbnailUrl } = useThumbnail(book.url);
   const { isLoading, fetchMetadata, error: metadataError } = useYouTubeMetadata();
+  const changeThrottleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
-  // Validation state
-  const [isUrlValid, setIsUrlValid] = useState<boolean>(false);
-  const [isThumbnailLoaded, setIsThumbnailLoaded] = useState<boolean>(false);
-  const [metadataFetchError, setMetadataFetchError] = useState<boolean>(false);
+  // Local state for immediate UI updates (no lag)
+  const [localBook, setLocalBook] = useState<BookDto>(book);
+  
+  // Sync local state with prop changes from parent
+  useEffect(() => {
+    setLocalBook(book);
+  }, [book]);
   
   // Comparison dialog state
   const [comparisonDialogOpen, setComparisonDialogOpen] = useState(false);
   const [comparisons, setComparisons] = useState<MetadataComparison[]>([]);
   const [selectedValues, setSelectedValues] = useState<Record<string, 'current' | 'fetched'>>({});
+  const [isThumbnailLoaded, setIsThumbnailLoaded] = useState(false);
   
-  // Collapsed state from store - default to expanded (not in collapsed set)
+  // Collapsed state from store
   const collapsedBookIds = useAppStore((state) => state.collapsedBookIds);
   const toggleBookCollapsed = useAppStore((state) => state.toggleBookCollapsed);
   const isCollapsed = collapsedBookIds.has(book.id);
 
-  useEffect(() => {
-    setLocalBook(book);
-  }, [book]);
+  // Zod validation state - computed reactively from local state for immediate feedback
+  const validationResult = useMemo(() => {
+    return bookDtoSchema.safeParse(localBook);
+  }, [localBook]);
 
-  // Validate URL format and reset thumbnail state when URL changes
-  useEffect(() => {
-    if (!localBook.url || localBook.url.trim().length === 0) {
-      setIsUrlValid(false);
-      setIsThumbnailLoaded(false);
-      setMetadataFetchError(false);
-      return;
+  // Field-level validation errors
+  const fieldErrors = useMemo(() => {
+    if (validationResult.success) {
+      return {};
     }
+    const errors: Record<string, string> = {};
+    if (validationResult.error) {
+      validationResult.error.issues.forEach((issue) => {
+        const path = issue.path.join('.');
+        errors[path] = issue.message;
+      });
+    }
+    return errors;
+  }, [validationResult]);
 
+  // Derived validation state - computed reactively from local state for immediate feedback
+  const isUrlValid = useMemo(() => {
+    if (!localBook.url?.trim()) return false;
     try {
       const youtubePattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/i;
-      const isValid = youtubePattern.test(localBook.url.trim());
-      setIsUrlValid(isValid);
-      
-      // Reset thumbnail and metadata error state when URL changes
-      if (isValid) {
-        setIsThumbnailLoaded(false);
-        setMetadataFetchError(false);
-      }
+      return youtubePattern.test(localBook.url.trim());
     } catch {
-      setIsUrlValid(false);
-      setIsThumbnailLoaded(false);
-      setMetadataFetchError(false);
+      return false;
     }
   }, [localBook.url]);
 
-  // Reset thumbnail loaded state when thumbnail URL becomes null
-  useEffect(() => {
-    if (!thumbnailUrl) {
-      setIsThumbnailLoaded(false);
-    }
-  }, [thumbnailUrl]);
+  const isUrlFullyValid = useMemo(() => {
+    return isUrlValid && !!thumbnailUrl && isThumbnailLoaded && !metadataError && !isLoading;
+  }, [isUrlValid, thumbnailUrl, isThumbnailLoaded, metadataError, isLoading]);
 
   const handleComparisonSelect = (fieldName: string, value: 'current' | 'fetched') => {
     setSelectedValues(prev => ({ ...prev, [fieldName]: value }));
@@ -99,97 +101,68 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
       if (selected === 'fetched') {
         updatedBook[comparison.fieldName] = comparison.fetched;
       }
-      // else keep current value (no change needed)
     });
     setLocalBook(updatedBook);
     onBookChange(updatedBook);
     setComparisonDialogOpen(false);
   };
 
-  const attemptFetchMetadata = useCallback(async (url: string) => {
-    console.log('BookCard: attemptFetchMetadata called with URL:', url);
-    
-    if (!url || url.trim().length === 0) {
-      console.log('BookCard: Skipping fetch - empty URL');
-      setMetadataFetchError(false);
-      return;
-    }
+  // Reset thumbnail loaded state when URL changes
+  useEffect(() => {
+    setIsThumbnailLoaded(false);
+  }, [localBook.url]);
 
-    // Allow re-fetching without checking previousUrlRef
-    // This enables manual refresh via the button
+  useEffect(() => {
+    if (!thumbnailUrl) {
+      setIsThumbnailLoaded(false);
+    }
+  }, [thumbnailUrl]);
+
+  const attemptFetchMetadata = useCallback(async (url: string) => {
+    if (!url?.trim() || !isUrlValid) return;
     
     try {
-      const youtubePattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/i;
-      const isValid = youtubePattern.test(url.trim());
-      console.log('BookCard: URL validation result:', isValid);
+      const metadata = await fetchMetadata(url);
       
-      if (isValid) {
-        console.log('BookCard: Calling fetchMetadata...');
-        setMetadataFetchError(false);
+      if (metadata) {
+        // Check for conflicts with existing data
+        const diffs: MetadataComparison[] = [];
         
-        // Clear error state before fetch
-        const metadata = await fetchMetadata(url);
-        console.log('BookCard: fetchMetadata returned:', metadata);
-        
-        if (metadata) {
-          console.log('BookCard: Checking for conflicting data...');
-          
-          // Check if there's existing data that differs from fetched metadata
-          const diffs: MetadataComparison[] = [];
-          
-          if (localBook.title.trim() && localBook.title !== metadata.title) {
-            diffs.push({
-              fieldName: 'title',
-              current: localBook.title,
-              fetched: metadata.title,
-            });
-          }
-          
-          if (localBook.author.trim() && localBook.author !== metadata.authorName) {
-            diffs.push({
-              fieldName: 'author',
-              current: localBook.author,
-              fetched: metadata.authorName,
-            });
-          }
-
-          if (diffs.length > 0) {
-            console.log('BookCard: Conflicts found, showing comparison dialog...');
-            setComparisons(diffs);
-            setSelectedValues(Object.fromEntries(diffs.map(d => [d.fieldName, 'current'])));
-            setComparisonDialogOpen(true);
-          } else {
-            console.log('BookCard: No conflicts, updating book with metadata...');
-            const updatedBook = { 
-              ...localBook, 
-              url: url,
-              title: localBook.title.trim() === '' ? metadata.title : localBook.title,
-              author: localBook.author.trim() === '' ? metadata.authorName : localBook.author,
-            };
-            setLocalBook(updatedBook);
-            onBookChange(updatedBook);
-          }
-          setMetadataFetchError(false);
-        } else {
-          // Metadata fetch returned null, which indicates an error (non-ok response or missing video)
-          setMetadataFetchError(true);
+        if (localBook.title.trim() && localBook.title !== metadata.title) {
+          diffs.push({
+            fieldName: 'title',
+            current: localBook.title,
+            fetched: metadata.title,
+          });
         }
-      } else {
-        setMetadataFetchError(false);
+        
+        if (localBook.author.trim() && localBook.author !== metadata.authorName) {
+          diffs.push({
+            fieldName: 'author',
+            current: localBook.author,
+            fetched: metadata.authorName,
+          });
+        }
+
+        if (diffs.length > 0) {
+          setComparisons(diffs);
+          setSelectedValues(Object.fromEntries(diffs.map(d => [d.fieldName, 'current'])));
+          setComparisonDialogOpen(true);
+        } else {
+          // Auto-update empty fields
+          const updatedBook = {
+            ...localBook,
+            title: localBook.title.trim() || metadata.title,
+            author: localBook.author.trim() || metadata.authorName,
+          };
+          setLocalBook(updatedBook);
+          onBookChange(updatedBook);
+        }
       }
     } catch (error) {
       console.error('BookCard: Error fetching YouTube metadata:', error);
-      // Mark as error if metadata fetch failed
-      setMetadataFetchError(true);
     }
-  }, [localBook, fetchMetadata, onBookChange]);
-  
-  // Update metadata error state when hook error changes
-  useEffect(() => {
-    if (metadataError) {
-      setMetadataFetchError(true);
-    }
-  }, [metadataError]);
+  }, [localBook, isUrlValid, fetchMetadata, onBookChange]);
 
   const handleChange = useCallback((key: keyof BookDto, value: string | number | undefined) => {
     let parsedValue: string | number | undefined = value;
@@ -198,37 +171,46 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
       if (isNaN(parsedValue) || parsedValue < 1) parsedValue = 1;
     } else if (key === 'year') {
       parsedValue = parseInt(value as string, 10);
-      if (isNaN(parsedValue)) {
-        parsedValue = undefined;
-      } else if (parsedValue < 1) {
-        parsedValue = undefined;
-      }
+      if (isNaN(parsedValue) || parsedValue < 1) parsedValue = undefined;
     }
     
-    const updatedBook = { ...localBook, [key]: parsedValue };
-    setLocalBook(updatedBook);
-    onBookChange(updatedBook);
-
-    if (key === 'url' && typeof parsedValue === 'string') {
-      console.log('BookCard: URL changed, scheduling metadata fetch...');
+    // Update local state immediately for responsive UI (no lag)
+    setLocalBook((prev) => {
+      const updatedBook = { ...prev, [key]: parsedValue };
       
-      if (fetchTimeoutRef.current) {
-        clearTimeout(fetchTimeoutRef.current);
+      // Debounce parent updates
+      if (changeThrottleRef.current) {
+        clearTimeout(changeThrottleRef.current);
       }
-
-      // Only auto-fetch metadata if skipAutoMetadataFetch is false
-      if (!skipAutoMetadataFetch) {
-        fetchTimeoutRef.current = setTimeout(() => {
-          attemptFetchMetadata(parsedValue.trim());
-        }, 500);
-      }
-    }
-  }, [localBook, onBookChange, attemptFetchMetadata, skipAutoMetadataFetch]);
+      
+      changeThrottleRef.current = setTimeout(() => {
+        onBookChange(updatedBook);
+        
+        // Auto-fetch metadata for URL changes
+        if (key === 'url' && typeof parsedValue === 'string' && parsedValue && !skipAutoMetadataFetch) {
+          const urlValue = parsedValue.trim();
+          if (urlValue) {
+            if (fetchTimeoutRef.current) {
+              clearTimeout(fetchTimeoutRef.current);
+            }
+            fetchTimeoutRef.current = setTimeout(() => {
+              attemptFetchMetadata(urlValue);
+            }, 500);
+          }
+        }
+      }, 500);
+      
+      return updatedBook;
+    });
+  }, [onBookChange, attemptFetchMetadata, skipAutoMetadataFetch]);
 
   useEffect(() => {
     return () => {
       if (fetchTimeoutRef.current) {
         clearTimeout(fetchTimeoutRef.current);
+      }
+      if (changeThrottleRef.current) {
+        clearTimeout(changeThrottleRef.current);
       }
     };
   }, []);
@@ -247,37 +229,25 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
     setIsThumbnailLoaded(false);
   };
 
-  // Calculate validation state
-  // URL is fully valid when: format is valid, thumbnail URL exists and is loaded, no metadata errors, and not currently loading
-  const isUrlFullyValid = isUrlValid && !!thumbnailUrl && isThumbnailLoaded && !metadataFetchError && !isLoading;
+  // Derived computed values - use local state for immediate UI updates
+  const isEmpty = useMemo(() => (
+    !localBook.url.trim() &&
+    !localBook.title.trim() &&
+    !localBook.author.trim() &&
+    (!localBook.series || !localBook.series.trim()) &&
+    localBook.seriesNumber === 1 &&
+    !localBook.year
+  ), [localBook]);
 
-  // Check if book is empty with default values
-  const isEmpty = (book: BookDto): boolean => {
-    return (
-      !book.url.trim() &&
-      !book.title.trim() &&
-      !book.author.trim() &&
-      (!book.series || !book.series.trim()) &&
-      book.seriesNumber === 1 &&
-      !book.year
-    );
-  };
-
-  // Format collapsed heading: Author - Title
-  const formatCollapsedHeading = (book: BookDto): string => {
-    const author = book.author.trim();
-    const title = book.title.trim();
+  const formatCollapsedHeading = useMemo(() => {
+    const author = localBook.author.trim();
+    const title = localBook.title.trim();
     
-    if (author && title) {
-      return `${author} - ${title}`;
-    } else if (author) {
-      return author;
-    } else if (title) {
-      return title;
-    }
-    
+    if (author && title) return `${author} - ${title}`;
+    if (author) return author;
+    if (title) return title;
     return tString('books_new_book');
-  };
+  }, [localBook.author, localBook.title, tString]);
 
   return (
     <>
@@ -323,7 +293,7 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
             color: 'text.primary',
           }}
         >
-          {isEmpty(localBook) ? t('books_add_new_book_placeholder') : formatCollapsedHeading(localBook) || t('books_new_book')}
+          {isEmpty ? t('books_add_new_book_placeholder') : formatCollapsedHeading || t('books_new_book')}
         </Typography>
         <IconButton
           onClick={(e) => {
@@ -360,20 +330,20 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
             <Typography variant="caption" color="text.secondary">{t('book_card_no_preview')}</Typography>
           </Box>
         )}
-        <TextField
-          label={
-            <>
-              {t('book_card_youtube_url')} <Typography component="span" sx={{ color: 'error.main' }}>{t('book_card_required')}</Typography>
-            </>
-          }
-          value={localBook.url}
-          onChange={(e) => handleChange('url', e.target.value)}
-          fullWidth
-          variant="outlined"
-          size="small"
-          disabled={isLoading}
-          helperText={t('book_card_youtube_url_helper')}
-          error={isUrlValid && (metadataFetchError || (!!thumbnailUrl && !isThumbnailLoaded))}
+      <TextField
+        label={
+          <>
+            {t('book_card_youtube_url')} <Typography component="span" sx={{ color: 'error.main' }}>{t('book_card_required')}</Typography>
+          </>
+        }
+        value={localBook.url}
+        onChange={(e) => handleChange('url', e.target.value)}
+        fullWidth
+        variant="outlined"
+        size="small"
+        disabled={isLoading}
+        helperText={fieldErrors.url || t('book_card_youtube_url_helper')}
+        error={Boolean(fieldErrors.url || (!localBook.url?.trim() || (isUrlValid && (metadataError || (!!thumbnailUrl && !isThumbnailLoaded)))))}
           sx={{
             '& .MuiOutlinedInput-root': {
               '& fieldset': {
@@ -420,7 +390,8 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
         variant="outlined"
         size="small"
         disabled={isLoading}
-        helperText={t('book_card_book_title_helper')}
+        helperText={fieldErrors.title || t('book_card_book_title_helper')}
+        error={Boolean(fieldErrors.title)}
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
@@ -444,7 +415,8 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
         variant="outlined"
         size="small"
         disabled={isLoading}
-        helperText={t('book_card_author_helper')}
+        helperText={fieldErrors.author || t('book_card_author_helper')}
+        error={Boolean(fieldErrors.author)}
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
@@ -464,7 +436,8 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
         variant="outlined"
         size="small"
         disabled={isLoading}
-        helperText={t('book_card_narrator_helper')}
+        helperText={fieldErrors.narrator || t('book_card_narrator_helper')}
+        error={Boolean(fieldErrors.narrator)}
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
@@ -507,7 +480,8 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
           size="small"
           disabled={isLoading}
           inputProps={{ min: 1 }}
-          helperText={t('book_card_series_number_helper')}
+          helperText={fieldErrors.seriesNumber || t('book_card_series_number_helper')}
+          error={Boolean(fieldErrors.seriesNumber)}
         />
         <TextField
           label={t('book_card_year')}
@@ -519,6 +493,8 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
           size="small"
           disabled={isLoading}
           inputProps={{ min: 1 }}
+          helperText={fieldErrors.year}
+          error={Boolean(fieldErrors.year)}
         />
       </Box>
         </Box>

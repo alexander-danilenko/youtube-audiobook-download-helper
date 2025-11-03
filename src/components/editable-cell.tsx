@@ -9,9 +9,10 @@ interface EditableCellProps {
   onChange: (value: string | number | undefined) => void;
   label?: string;
   type?: string;
+  error?: boolean;
 }
 
-export const EditableCell: React.FC<EditableCellProps> = ({ value, onChange, label, type = 'text' }) => {
+export const EditableCell: React.FC<EditableCellProps> = ({ value, onChange, label, type = 'text', error = false }) => {
   const [localValue, setLocalValue] = useState<string | number | undefined>(value);
 
   React.useEffect(() => {
@@ -36,6 +37,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({ value, onChange, lab
       variant="outlined"
       size="small"
       fullWidth
+      error={error}
       InputProps={{
         endAdornment: (
           <InputAdornment position="end">

@@ -1,12 +1,10 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Table, TableBody, TableCell, TableHead, TableRow, Paper, TableContainer, IconButton } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { BookDto } from '../application/dto/book-dto';
-import { useAppStore } from '../application/stores/app-store';
-import { useBookTable } from '../hooks/use-book-table';
 import { EditableCell } from './editable-cell';
 import { ThumbnailCell } from './thumbnail-cell';
 import { CsvImportExport } from './csv-import-export';
@@ -123,10 +121,10 @@ export function BookTable({ books, onBooksChange, onThumbnailClick }: BookTableP
                   />
                 </TableCell>
                 <TableCell>
-                  <EditableCell value={book.title} onChange={(value) => handleBookChange({ ...book, title: value as string })} />
+                  <EditableCell value={book.title} onChange={(value) => handleBookChange({ ...book, title: value as string })} error={!book.title?.trim()} />
                 </TableCell>
                 <TableCell>
-                  <EditableCell value={book.author} onChange={(value) => handleBookChange({ ...book, author: value as string })} />
+                  <EditableCell value={book.author} onChange={(value) => handleBookChange({ ...book, author: value as string })} error={!book.author?.trim()} />
                 </TableCell>
                 <TableCell>
                   <EditableCell value={book.narrator} onChange={(value) => handleBookChange({ ...book, narrator: value as string })} />
