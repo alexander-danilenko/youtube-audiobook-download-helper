@@ -26,7 +26,7 @@ export function AppHeader() {
           <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Box
               component="img"
-              src="/icon.svg"
+              src="../icon.svg"
               alt="YouTube"
               sx={{
                 width: 64,
