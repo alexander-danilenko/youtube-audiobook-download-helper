@@ -1,12 +1,14 @@
 {
   "name": "youtube-audiobook-download-helper",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "clean": "rm -rf .next out",
+    "nuke": "rm -rf .next out node_modules"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
@@ -18,6 +20,7 @@
     "next": "16.0.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "react-markdown": "^10.1.0",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.10.0",
     "zustand": "^5.0.8"

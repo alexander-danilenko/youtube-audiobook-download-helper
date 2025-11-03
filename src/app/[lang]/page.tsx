@@ -23,7 +23,7 @@ export default function Home() {
   
   // Initialize persistence and wait for hydration
   const isHydrated = usePersistStore();
-  const { t } = useTranslation();
+  const { t, tMarkdown } = useTranslation();
   const setLanguage = useLanguageStore((state) => state.setLanguage);
 
   // Sync URL language with store
@@ -63,34 +63,7 @@ export default function Home() {
           <Stack spacing={3}>
             {/* Introduction Section */}
             <Paper elevation={0} sx={{ p: 3, bgcolor: 'background.paper' }}>
-              <Stack spacing={2}>
-                <Typography variant="h4" component="h2" sx={{ fontWeight: 600, mb: 1 }}>
-                  {t('page_description_heading')}
-                </Typography>
-                <Typography variant="body1">
-                  {t('introduction_paragraph_1')}
-                </Typography>
-                
-                <Typography variant="body1">
-                  {t('introduction_paragraph_2', {
-                    ytdlp: (
-                      <Typography component="code" variant="inherit" sx={{ bgcolor: 'action.hover', px: 0.5, borderRadius: 0.5, fontFamily: 'monospace' }}>
-                        {t('introduction_ytdlp')}
-                      </Typography>
-                    ),
-                    downloadAudio: <strong>{t('introduction_download_audio')}</strong>,
-                    ffmpeg: (
-                      <Typography component="code" variant="inherit" sx={{ bgcolor: 'action.hover', px: 0.5, borderRadius: 0.5, fontFamily: 'monospace' }}>
-                        {t('introduction_ffmpeg')}
-                      </Typography>
-                    ),
-                  })}
-                </Typography>
-                
-                <Typography variant="body1">
-                  {t('introduction_paragraph_3')}
-                </Typography>
-              </Stack>
+              {tMarkdown('introduction_section')}
             </Paper>
 
             {/* Book Table Section */}
@@ -181,18 +154,7 @@ export default function Home() {
             <Paper elevation={0} sx={{ p: 3, bgcolor: 'background.paper' }}>
               <Stack spacing={2}>
                 <Alert severity="warning">
-                  <strong>{t('script_generation_warning')}</strong>: {t('script_generation_warning_text', {
-                    ytdlpLink: (
-                      <Link href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener noreferrer" underline="hover">
-                        yt-dlp
-                      </Link>
-                    ),
-                    ffmpegLink: (
-                      <Link href="https://ffmpeg.org/" target="_blank" rel="noopener noreferrer" underline="hover">
-                        ffmpeg
-                      </Link>
-                    ),
-                  })}
+                  {tMarkdown('script_generation_warning_text')}
                 </Alert>
                 <GetDownloadCommandButton books={books} filenameTemplate={filenameTemplate} cookiesBrowser={cookiesBrowser} />
               </Stack>

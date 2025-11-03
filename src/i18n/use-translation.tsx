@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
+import React from 'react';
 import { useLanguageStore } from './language-store';
 import { translations, TranslationKey } from './translations';
+import { MarkdownText } from '../components/markdown-text';
 
 /**
  * Replaces placeholders in translation strings
@@ -87,7 +89,67 @@ export function useTranslation() {
     [language]
   );
 
-  return { t, language };
+  /**
+   * Returns a React component that renders the translation as markdown.
+   * Use this for JSX contexts where you want markdown support.
+   * 
+   * @param key - Translation key
+   * @param values - Optional placeholder values (can be strings or ReactNodes)
+   * @param options - Optional rendering options (variant, component, sx)
+   */
+  const tMarkdown = useMemo(
+    () => (
+      key: TranslationKey,
+      values?: Record<string, string | React.ReactNode>,
+      options?: {
+        variant?: 'body1' | 'body2' | 'caption' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+        component?: React.ElementType;
+        sx?: React.CSSProperties;
+      }
+    ): React.ReactElement => {
+      const translation = translations[language][key];
+
+      if (!translation) {
+        console.warn(`Translation missing for key: ${key}`);
+        return <MarkdownText {...options}>{key}</MarkdownText>;
+      }
+
+      // Separate string and ReactNode placeholders
+      const stringPlaceholders: Record<string, string> = {};
+      const reactNodePlaceholders: Record<string, React.ReactNode> = {};
+
+      if (values) {
+        Object.entries(values).forEach(([k, v]) => {
+          if (typeof v === 'string') {
+            stringPlaceholders[k] = v;
+          } else {
+            reactNodePlaceholders[k] = v;
+          }
+        });
+      }
+
+      // Replace string placeholders first
+      let processedTranslation = translation;
+      Object.entries(stringPlaceholders).forEach(([k, v]) => {
+        processedTranslation = processedTranslation.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+      });
+
+      // If we have ReactNode placeholders, pass them to MarkdownText
+      if (Object.keys(reactNodePlaceholders).length > 0) {
+        return (
+          <MarkdownText {...options} placeholders={reactNodePlaceholders}>
+            {processedTranslation}
+          </MarkdownText>
+        );
+      }
+
+      // Simple case: just render markdown
+      return <MarkdownText {...options}>{processedTranslation}</MarkdownText>;
+    },
+    [language]
+  );
+
+  return { t, tMarkdown, language };
 }
 
 /**
