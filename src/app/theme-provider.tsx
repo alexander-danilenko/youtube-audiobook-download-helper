@@ -116,8 +116,18 @@ const createAppTheme = (mode: 'light' | 'dark') => {
         styleOverrides: {
           root: {
             '@media (max-width:599.95px)': {
-              paddingLeft: 16,
-              paddingRight: 16,
+              paddingLeft: 0,
+              paddingRight: 0,
+            },
+          },
+        },
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            '@media (max-width:599.95px)': {
+              width: '100%',
+              borderRadius: 0,
             },
           },
         },

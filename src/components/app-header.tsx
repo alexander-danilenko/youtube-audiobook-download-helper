@@ -27,7 +27,7 @@ export function AppHeader() {
 
   return (
     <AppBar position="static" elevation={0}>
-      <Container maxWidth="xl" sx={{ width: '100%', py: { xs: 1.5, sm: 2 } }}>
+      <Container maxWidth="xl" sx={{ width: '100%', py: { xs: 1.5, sm: 2 }, px: { xs: 2, sm: 3 } }}>
         <Box
           sx={{
             display: 'flex',

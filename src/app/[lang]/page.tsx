@@ -52,9 +52,9 @@ export default function Home() {
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
       <AppHeader />
       
-      <Box component="main" sx={{ flexGrow: 1, py: { xs: 2, sm: 3 } }}>
-        <Container maxWidth="xl">
-          <Stack spacing={{ xs: 2, sm: 3 }}>
+      <Box component="main" sx={{ flexGrow: 1, py: { xs: 0, sm: 3 } }}>
+        <Container maxWidth="xl" sx={{ px: { xs: 0, sm: 3 } }}>
+          <Stack spacing={{ xs: 0, sm: 3 }}>
             {/* Introduction Section */}
             <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, bgcolor: 'background.paper' }}>
               {tMarkdown('introduction_section')}

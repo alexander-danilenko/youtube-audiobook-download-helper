@@ -20,7 +20,7 @@ export function AppFooter() {
         borderColor: 'divider',
       }}
     >
-      <Container maxWidth="xl">
+      <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3 } }}>
         <Stack spacing={3}>
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
