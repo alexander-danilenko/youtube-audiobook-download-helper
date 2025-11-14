@@ -13,9 +13,10 @@ interface UseBookCardProps {
   onBookChange: (updatedBook: BookDto) => void;
   skipAutoMetadataFetch?: boolean;
   onMetadataFetchSuccess?: () => void;
+  showMetadataDialog?: boolean;
 }
 
-export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false, onMetadataFetchSuccess }: UseBookCardProps) {
+export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false, onMetadataFetchSuccess, showMetadataDialog = true }: UseBookCardProps) {
   const { t } = useTranslation();
   const tString = useTranslationString();
   const { thumbnailUrl, fullSizeThumbnailUrl } = useThumbnail(book.url);
@@ -25,6 +26,7 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
 
   const changeThrottleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const titleFetchInitiatedRef = useRef<string | null>(null);
 
   // Local state for immediate UI updates (no lag)
   // Use reducer to sync props to state without triggering setState-in-effect warning
@@ -55,6 +57,20 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
   const [comparisonDialogOpen, setComparisonDialogOpen] = useState(false);
   const [comparisons, setComparisons] = useState<MetadataComparison[]>([]);
   const [selectedValues, setSelectedValues] = useState<Record<string, 'current' | 'fetched'>>({});
+  
+  // Store fetched YouTube title for display in helper text - use reducer to avoid setState-in-effect warning
+  type FetchedTitleAction = { type: 'RESET' } | { type: 'SET'; payload: string };
+  const fetchedTitleReducer = (state: string | null, action: FetchedTitleAction): string | null => {
+    switch (action.type) {
+      case 'RESET':
+        return null;
+      case 'SET':
+        return action.payload;
+      default:
+        return state;
+    }
+  };
+  const [fetchedYouTubeTitle, dispatchFetchedTitle] = useReducer(fetchedTitleReducer, null);
   
   // Use reducer for thumbnail loaded state to avoid setState-in-effect warning
   type ThumbnailAction = { type: 'RESET' } | { type: 'SET_LOADED'; payload: boolean };
@@ -99,11 +115,13 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
   const previousUrlRef = useRef<string>(localBook.url);
   const previousThumbnailUrlRef = useRef<string | null>(thumbnailUrl);
 
-  // Reset thumbnail loaded state when URL changes using reducer pattern
+  // Reset thumbnail loaded state and fetched title when URL changes using reducer pattern
   useEffect(() => {
     if (previousUrlRef.current !== localBook.url) {
       previousUrlRef.current = localBook.url;
       dispatchThumbnail({ type: 'RESET' });
+      dispatchFetchedTitle({ type: 'RESET' });
+      titleFetchInitiatedRef.current = null;
     }
   }, [localBook.url]);
 
@@ -115,6 +133,44 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
     previousThumbnailUrlRef.current = thumbnailUrl;
   }, [thumbnailUrl]);
 
+  // Fetch title when book has URL but no fetched title (e.g., after page load)
+  useEffect(() => {
+    const url = localBook.url?.trim();
+    if (
+      url &&
+      isUrlValid &&
+      !fetchedYouTubeTitle &&
+      !isLoading &&
+      !skipAutoMetadataFetch &&
+      titleFetchInitiatedRef.current !== url
+    ) {
+      // Mark as initiated to prevent duplicate fetches
+      titleFetchInitiatedRef.current = url;
+      
+      // Fetch metadata to get the title for display
+      const fetchTitle = async (): Promise<void> => {
+        try {
+          const metadata = await fetchMetadata(url);
+          if (metadata?.title) {
+            dispatchFetchedTitle({ type: 'SET', payload: metadata.title });
+          }
+        } catch (error) {
+          console.error('Failed to fetch title for display:', error);
+          // Reset on error so it can be retried
+          if (titleFetchInitiatedRef.current === url) {
+            titleFetchInitiatedRef.current = null;
+          }
+        }
+      };
+      fetchTitle();
+    }
+    
+    // Reset ref when URL changes
+    if (url !== titleFetchInitiatedRef.current && titleFetchInitiatedRef.current !== null) {
+      titleFetchInitiatedRef.current = null;
+    }
+  }, [localBook.url, isUrlValid, fetchedYouTubeTitle, isLoading, skipAutoMetadataFetch, fetchMetadata]);
+
   const attemptFetchMetadata = useCallback(
     async (url: string) => {
       if (!url?.trim() || !isUrlValid) return;
@@ -123,9 +179,13 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
         const metadata = await fetchMetadata(url);
 
         if (metadata) {
+          // Store fetched YouTube title for display
+          dispatchFetchedTitle({ type: 'SET', payload: metadata.title });
+          
           const diffs = metadataComparisonService.compareMetadata(localBook, metadata);
 
-          if (diffs.length > 0) {
+          if (diffs.length > 0 && showMetadataDialog) {
+            // Show dialog only if flag is true
             setComparisons(diffs);
             setSelectedValues(metadataComparisonService.createDefaultSelectedValues(diffs));
             setComparisonDialogOpen(true);
@@ -146,9 +206,10 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
         }
       } catch (error) {
         console.error('BookCard: Error fetching YouTube metadata:', error);
+        dispatchFetchedTitle({ type: 'RESET' });
       }
     },
-    [localBook, isUrlValid, fetchMetadata, onBookChange, metadataComparisonService, onMetadataFetchSuccess]
+    [localBook, isUrlValid, fetchMetadata, onBookChange, metadataComparisonService, onMetadataFetchSuccess, showMetadataDialog]
   );
 
   const handleChange = useCallback(
@@ -290,9 +351,13 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
         try {
           const metadata = await fetchMetadata(normalized);
           if (metadata) {
+            // Store fetched YouTube title for display
+            dispatchFetchedTitle({ type: 'SET', payload: metadata.title });
+            
             const diffs = metadataComparisonService.compareMetadata(localBook, metadata);
 
-            if (diffs.length > 0) {
+            if (diffs.length > 0 && showMetadataDialog) {
+              // Show dialog only if flag is true
               setComparisons(diffs);
               setSelectedValues(metadataComparisonService.createDefaultSelectedValues(diffs));
               setComparisonDialogOpen(true);
@@ -300,6 +365,7 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
                 onMetadataFetchSuccess();
               }
             } else {
+              // Auto-update empty fields
               const updatedBook = metadataComparisonService.autoUpdateEmptyFields(
                 { ...localBook, url: valueToSet },
                 metadata
@@ -316,7 +382,7 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
         }
       }
     },
-    [handleChange, fetchMetadata, localBook, onBookChange, skipAutoMetadataFetch, metadataComparisonService, onMetadataFetchSuccess]
+    [handleChange, fetchMetadata, localBook, onBookChange, skipAutoMetadataFetch, metadataComparisonService, onMetadataFetchSuccess, showMetadataDialog]
   );
 
   const handleComparisonSelect = (fieldName: string, value: 'current' | 'fetched') => {
@@ -369,6 +435,7 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
     comparisons,
     selectedValues,
     metadataError,
+    fetchedYouTubeTitle,
     // Handlers
     handleChange,
     handleUrlBlur,

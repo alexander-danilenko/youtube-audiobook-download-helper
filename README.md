@@ -9,25 +9,34 @@ This project is a Next.js application designed to help users download YouTube vi
 
 ## Development Instructions
 
-1.  **Clone the repository:**
+1. **Clone the repository:**
+
     ```bash
     git clone https://github.com/alexander-danilenko/youtube-audiobook-downloader.git
     cd youtube-audiobook-downloader
     ```
-2.  **Install dependencies:**
+
+2. **Install dependencies:**
+
     ```bash
     yarn install
     ```
-3.  **Run the development server:**
+
+3. **Run the development server:**
+
     ```bash
     yarn dev
     ```
+
     Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-4.  **Build for production:**
+4. **Build for production:**
+
     ```bash
     yarn build
     ```
-5.  **Start production server:**
+
+5. **Start production server:**
+
     ```bash
     yarn start
     ```

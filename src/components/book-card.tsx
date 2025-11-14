@@ -21,9 +21,11 @@ interface BookCardProps {
   onClone: () => void;
   onThumbnailClick: (imageUrl: string) => void;
   skipAutoMetadataFetch?: boolean;
+  isFetchingMetadata?: boolean;
+  showMetadataDialog?: boolean;
 }
 
-export function BookCard({ book, onBookChange, onRemove, onClone, onThumbnailClick, skipAutoMetadataFetch = false }: BookCardProps) {
+export function BookCard({ book, onBookChange, onRemove, onClone, onThumbnailClick, skipAutoMetadataFetch = false, isFetchingMetadata = false, showMetadataDialog = true }: BookCardProps) {
   const { t } = useTranslation();
   const tString = useTranslationString();
   const urlInputRef = React.useRef<HTMLInputElement>(null);
@@ -46,6 +48,7 @@ export function BookCard({ book, onBookChange, onRemove, onClone, onThumbnailCli
     comparisons,
     selectedValues,
     metadataError,
+    fetchedYouTubeTitle,
     handleChange,
     handleUrlBlur,
     handleUrlPaste,
@@ -60,6 +63,7 @@ export function BookCard({ book, onBookChange, onRemove, onClone, onThumbnailCli
     book, 
     onBookChange, 
     skipAutoMetadataFetch,
+    showMetadataDialog,
     onMetadataFetchSuccess: () => {
       setSnackbarMessage(t('book_card_metadata_fetch_success') as string);
       setSnackbarOpen(true);
@@ -69,6 +73,20 @@ export function BookCard({ book, onBookChange, onRemove, onClone, onThumbnailCli
   const handleThumbnailClick = (): void => {
     if (fullSizeThumbnailUrl) {
       onThumbnailClick(fullSizeThumbnailUrl);
+    }
+  };
+
+  const handleCopyTitle = async (): Promise<void> => {
+    if (fetchedYouTubeTitle) {
+      try {
+        await navigator.clipboard.writeText(fetchedYouTubeTitle);
+        setSnackbarMessage(t('book_card_title_copied') as string);
+        setSnackbarOpen(true);
+      } catch (error) {
+        console.error('Failed to copy title:', error);
+        setSnackbarMessage(t('book_card_title_copy_failed') as string);
+        setSnackbarOpen(true);
+      }
     }
   };
 
@@ -223,7 +241,36 @@ export function BookCard({ book, onBookChange, onRemove, onClone, onThumbnailCli
                 disabled={isLoading}
                 onPaste={handleUrlPaste}
                 inputRef={urlInputRef}
-                helperText={fieldErrors.url || t('book_card_youtube_url_helper')}
+                helperText={
+                  fieldErrors.url ? (
+                    fieldErrors.url
+                  ) : isFetchingMetadata ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <CircularProgress size={12} sx={{ mr: 0.5 }} />
+                      <Typography variant="caption" component="span">
+                        {t('book_card_fetching_metadata')}
+                      </Typography>
+                    </Box>
+                  ) : fetchedYouTubeTitle ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Typography variant="caption" component="span" sx={{ flex: 1 }}>
+                        {fetchedYouTubeTitle}
+                      </Typography>
+                      <Tooltip title={tString('book_card_copy_title')}>
+                        <IconButton
+                          size="small"
+                          onClick={handleCopyTitle}
+                          sx={{ p: 0.5, minWidth: 'auto', width: 'auto', height: 'auto' }}
+                          aria-label={tString('book_card_copy_title')}
+                        >
+                          <ContentCopyIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  ) : (
+                    t('book_card_youtube_url_helper')
+                  )
+                }
                 error={Boolean(fieldErrors.url || (!localBook.url?.trim() || (isUrlValid && (metadataError || (!!thumbnailUrl && !isThumbnailLoaded)))))}
                 sx={{
                   '& .MuiOutlinedInput-root': {

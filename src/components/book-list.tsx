@@ -6,6 +6,7 @@ import { BookDto } from '@/application/dto';
 import { CsvImportExport } from './csv-import-export';
 import { BookCard } from './book-card';
 import { useBookList } from '@/hooks/use-book-list';
+import { useAutoFetchMetadata } from '@/hooks/use-auto-fetch-metadata';
 import { useTranslation } from '@/i18n';
 
 interface BookListProps {
@@ -20,6 +21,14 @@ export function BookList({ books, onBooksChange, onThumbnailClick }: BookListPro
     books,
     onBooksChange,
   });
+  
+  // Auto-fetch metadata for all books with URLs (without showing dialog)
+  // Note: Auto-fetch doesn't trigger dialogs - it just updates books directly
+  const { fetchingState } = useAutoFetchMetadata({
+    books,
+    onBookChange: handleBookChange,
+    skipAutoFetch: false,
+  });
 
   return (
     <Box sx={{ width: '100%', overflowX: 'hidden', maxWidth: 'none', p: 2 }}>
@@ -33,6 +42,8 @@ export function BookList({ books, onBooksChange, onThumbnailClick }: BookListPro
             onClone={() => handleCloneBook(book.id)}
             onThumbnailClick={onThumbnailClick}
             skipAutoMetadataFetch={isImported(book.id)}
+            isFetchingMetadata={fetchingState[book.id] || false}
+            showMetadataDialog={true}
           />
         ))}
       </Box>
