@@ -66,6 +66,7 @@ This document defines the functional requirements for the YT Audiobook Download 
 
 ### REQ0017: yt-dlp Command Format
 - Each generated command shall include:
+  - Format filter (`-f "bestaudio[ext=m4a]"`) to strictly require m4a format only, with no fallback
   - Audio extraction flag (`--extract-audio`)
   - Audio format specification (`--audio-format m4a`)
   - Chapter embedding (`--embed-chapters`)
