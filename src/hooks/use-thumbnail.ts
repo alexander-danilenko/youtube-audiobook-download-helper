@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { YoutubeUrl } from '../domain/value-objects/youtube-url';
+import { YoutubeUrl } from '@/domain/value-objects';
 
 export function useThumbnail(url: string) {
   const thumbnailUrl = useMemo(() => {

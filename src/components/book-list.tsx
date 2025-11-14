@@ -2,13 +2,11 @@
 
 import { Box, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { BookDto } from '../application/dto/book-dto';
+import { BookDto } from '@/application/dto';
 import { CsvImportExport } from './csv-import-export';
 import { BookCard } from './book-card';
-import { useRef } from 'react';
-import { useAppStore } from '../application/stores/app-store';
-import { useTranslation } from '../i18n/use-translation';
-
+import { useBookList } from '@/hooks/use-book-list';
+import { useTranslation } from '@/i18n';
 
 interface BookListProps {
   books: BookDto[];
@@ -18,66 +16,10 @@ interface BookListProps {
 
 export function BookList({ books, onBooksChange, onThumbnailClick }: BookListProps) {
   const { t } = useTranslation();
-  // Track book IDs that were imported via CSV to skip metadata fetching
-  const importedBookIdsRef = useRef<Set<string>>(new Set());
-  const expandAllBooks = useAppStore((state) => state.expandAllBooks);
-  
-  const handleImportedBooks = (importedBooks: BookDto[]): void => {
-    // Mark all imported books
-    importedBooks.forEach(book => {
-      importedBookIdsRef.current.add(book.id);
-    });
-    // Expand all imported books
-    expandAllBooks(importedBooks.map(book => book.id));
-    // Clear the set after a delay to allow initial render
-    // The imported flag only applies to the initial render, not future updates
-    setTimeout(() => {
-      importedBookIdsRef.current.clear();
-    }, 1000);
-  };
-  const handleAddRow = (): void => {
-    const newBook: BookDto = {
-      id: Date.now().toString(),
-      url: '',
-      title: '',
-      author: '',
-      narrator: '',
-      series: '',
-      seriesNumber: 1,
-      year: undefined,
-    };
-    onBooksChange([...books, newBook]);
-  };
-
-  const handleBookChange = (updatedBook: BookDto): void => {
-    onBooksChange(books.map((book) => (book.id === updatedBook.id ? updatedBook : book)));
-  };
-
-  const cleanupCollapsedState = useAppStore((state) => state.cleanupCollapsedState);
-
-  const handleBookRemove = (bookId: string): void => {
-    // If this is the last book, replace it with a new empty book instead of removing it
-    if (books.length === 1) {
-      const newBook: BookDto = {
-        id: Date.now().toString(),
-        url: '',
-        title: '',
-        author: '',
-        narrator: '',
-        series: '',
-        seriesNumber: 1,
-        year: undefined,
-      };
-      onBooksChange([newBook]);
-      // Clean up collapsed state for removed books
-      cleanupCollapsedState([newBook.id]);
-    } else {
-      const updatedBooks = books.filter((book) => book.id !== bookId);
-      onBooksChange(updatedBooks);
-      // Clean up collapsed state for removed books
-      cleanupCollapsedState(updatedBooks.map(book => book.id));
-    }
-  };
+  const { handleAddRow, handleBookChange, handleBookRemove, handleImportedBooks, isImported } = useBookList({
+    books,
+    onBooksChange,
+  });
 
   return (
     <Box sx={{ width: '100%', overflowX: 'hidden', maxWidth: 'none', p: 2 }}>
@@ -89,22 +31,16 @@ export function BookList({ books, onBooksChange, onThumbnailClick }: BookListPro
             onBookChange={handleBookChange}
             onRemove={() => handleBookRemove(book.id)}
             onThumbnailClick={onThumbnailClick}
-            skipAutoMetadataFetch={importedBookIdsRef.current.has(book.id)}
+            skipAutoMetadataFetch={isImported(book.id)}
           />
         ))}
       </Box>
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1, width: '100%', maxWidth: 'none' }}>
         <CsvImportExport books={books} onBooksChange={onBooksChange} onImport={handleImportedBooks} />
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={handleAddRow}
-        >
+        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleAddRow}>
           {t('books_add_new_book')}
         </Button>
       </Box>
     </Box>
   );
 }
-

@@ -3,7 +3,7 @@ import "../globals.css";
 import EmotionRegistry from "../emotion-registry";
 import { ThemeProvider } from "../theme-provider";
 import { CssBaseline } from "@mui/material";
-import { Language } from "../../i18n/translations";
+import { type Language } from "@/i18n";
 
 export const metadata: Metadata = {
   title: "YT Audiobook Download Helper",

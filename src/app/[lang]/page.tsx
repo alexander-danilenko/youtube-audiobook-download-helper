@@ -2,19 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { Typography, Box, Container, Paper, Stack, Alert, Link, Button } from '@mui/material';
-import '../../infrastructure/di/container';
-import { useAppStore } from '../../application/stores/app-store';
-import { usePersistStore } from '../../application/stores/storage-store';
-import { BookList } from '../../components/book-list';
-import { Settings } from '../../components/settings';
-import { GetDownloadCommandButton } from '../../components/generate-script-button';
-import { Lightbox } from '../../components/lightbox';
-import { AppHeader } from '../../components/app-header';
-import { AppFooter } from '../../components/app-footer';
-import { useTranslation } from '../../i18n/use-translation';
-import { useLanguageStore } from '../../i18n/language-store';
+import '@/infrastructure/di/container';
+import { useAppStore, usePersistStore } from '@/application/stores';
+import { BookList, Settings, GetDownloadCommandButton, Lightbox, AppHeader, AppFooter } from '@/components';
+import { useTranslation, useLanguageStore, type Language } from '@/i18n';
 import { useParams, useRouter } from 'next/navigation';
-import { Language } from '../../i18n/translations';
 
 export default function Home() {
   const params = useParams();

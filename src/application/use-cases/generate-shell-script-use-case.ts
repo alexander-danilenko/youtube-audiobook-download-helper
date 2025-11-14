@@ -1,6 +1,6 @@
 import { injectable, inject } from 'tsyringe';
-import { ScriptGeneratorService } from '../services/script-generator-service';
-import { ScriptGenerationDto, ScriptGenerationResult } from '../dto/script-generation-dto';
+import { ScriptGeneratorService } from '@/application/services';
+import { ScriptGenerationDto, ScriptGenerationResult } from '@/application/dto';
 
 @injectable()
 export class GenerateShellScriptUseCase {

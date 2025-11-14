@@ -1,9 +1,8 @@
 import { useCallback } from 'react';
-import { container } from '../infrastructure/di/container';
-import { GenerateShellScriptUseCase } from '../application/use-cases/generate-shell-script-use-case';
-import { BookDto } from '../application/dto/book-dto';
-
-import { CookiesBrowser } from '../application/stores/app-store';
+import { container } from '@/infrastructure/di/container';
+import { GenerateShellScriptUseCase } from '@/application/use-cases';
+import { BookDto } from '@/application/dto';
+import { CookiesBrowser } from '@/application/stores';
 
 export function useScriptGenerator() {
   const generateScript = useCallback((books: BookDto[], filenameTemplate: string, cookiesBrowser: CookiesBrowser): string => {

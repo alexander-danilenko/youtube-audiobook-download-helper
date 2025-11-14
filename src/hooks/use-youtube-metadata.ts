@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { container } from '../infrastructure/di/container';
-import { FetchYouTubeMetadataUseCase } from '../application/use-cases/fetch-youtube-metadata-use-case';
+import { container } from '@/infrastructure/di/container';
+import { FetchYouTubeMetadataUseCase } from '@/application/use-cases';
 
 export interface UseYouTubeMetadataResult {
   isLoading: boolean;

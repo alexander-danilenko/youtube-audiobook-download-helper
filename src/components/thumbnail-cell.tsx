@@ -3,7 +3,7 @@
 import React from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 import Image from 'next/image';
-import { useThumbnail } from '../hooks/use-thumbnail';
+import { useThumbnail } from '@/hooks';
 
 interface ThumbnailCellProps {
   videoUrl: string;

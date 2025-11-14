@@ -1,5 +1,5 @@
 import { injectable } from 'tsyringe';
-import type { IYouTubeMetadataRepository, YouTubeMetadata } from '../../domain/repositories/i-youtube-metadata-repository';
+import type { IYouTubeMetadataRepository, YouTubeMetadata } from '@/domain/repositories';
 
 @injectable()
 export class YoutubeMetadataRepository implements IYouTubeMetadataRepository {

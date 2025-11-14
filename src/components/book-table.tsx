@@ -1,15 +1,14 @@
 'use client';
 
-import { useState, useCallback } from 'react';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Table, TableBody, TableCell, TableHead, TableRow, Paper, TableContainer, IconButton } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { BookDto } from '../application/dto/book-dto';
+import { BookDto } from '@/application/dto';
 import { EditableCell } from './editable-cell';
 import { ThumbnailCell } from './thumbnail-cell';
 import { CsvImportExport } from './csv-import-export';
 import { YouTubeUrlCell } from './youtube-url-cell';
-
+import { useBookTable } from '@/hooks/use-book-table';
 
 interface BookTableProps {
   books: BookDto[];
@@ -18,77 +17,17 @@ interface BookTableProps {
 }
 
 export function BookTable({ books, onBooksChange, onThumbnailClick }: BookTableProps) {
-  const [cleanDialogOpen, setCleanDialogOpen] = useState<boolean>(false);
-
-  const handleAddRow = (): void => {
-    const newBook: BookDto = {
-      id: Date.now().toString(),
-      url: '',
-      title: '',
-      author: '',
-      narrator: '',
-      series: '',
-      seriesNumber: 1,
-      year: undefined,
-    };
-    onBooksChange([...books, newBook]);
-  };
-
-  const handleCleanClick = (): void => {
-    setCleanDialogOpen(true);
-  };
-
-  const handleCleanConfirm = (): void => {
-    onBooksChange([]);
-    setCleanDialogOpen(false);
-  };
-
-  const handleCleanCancel = (): void => {
-    setCleanDialogOpen(false);
-  };
-
-  const handleBookChange = useCallback((updatedBook: BookDto) => {
-    onBooksChange(books.map((book) => (book.id === updatedBook.id ? updatedBook : book)));
-  }, [books, onBooksChange]);
-
-  const handleUrlChange = useCallback((bookId: string, url: string) => {
-    const book = books.find((b) => b.id === bookId);
-    if (!book) return;
-    onBooksChange(books.map((b) => (b.id === bookId ? { ...b, url } : b)));
-  }, [books, onBooksChange]);
-
-  const handleMetadataFetched = useCallback((bookId: string, title: string, authorName: string) => {
-    const book = books.find((b) => b.id === bookId);
-    if (!book) return;
-
-    // Only auto-populate if fields are currently empty
-    const updatedBook: BookDto = {
-      ...book,
-      title: book.title.trim() === '' ? title : book.title,
-      author: book.author.trim() === '' ? authorName : book.author,
-    };
-
-    onBooksChange(books.map((b) => (b.id === bookId ? updatedBook : b)));
-  }, [books, onBooksChange]);
-
-  const handleBookRemove = (bookId: string): void => {
-    // If this is the last book, replace it with a new empty book instead of removing it
-    if (books.length === 1) {
-      const newBook: BookDto = {
-        id: Date.now().toString(),
-        url: '',
-        title: '',
-        author: '',
-        narrator: '',
-        series: '',
-        seriesNumber: 1,
-        year: undefined,
-      };
-      onBooksChange([newBook]);
-    } else {
-      onBooksChange(books.filter((book) => book.id !== bookId));
-    }
-  };
+  const {
+    cleanDialogOpen,
+    handleAddRow,
+    handleCleanClick,
+    handleCleanConfirm,
+    handleCleanCancel,
+    handleBookChange,
+    handleUrlChange,
+    handleMetadataFetched,
+    handleBookRemove,
+  } = useBookTable({ books, onBooksChange });
 
   return (
     <Box sx={{ width: '100%', overflowX: 'auto', p: 2 }}>
@@ -150,34 +89,18 @@ export function BookTable({ books, onBooksChange, onThumbnailClick }: BookTableP
       </TableContainer>
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1, width: '100%', maxWidth: 'none' }}>
         <CsvImportExport books={books} onBooksChange={onBooksChange} />
-        <Button
-          variant="outlined"
-          color="error"
-          startIcon={<DeleteIcon />}
-          onClick={handleCleanClick}
-          disabled={books.length === 0}
-        >
+        <Button variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={handleCleanClick} disabled={books.length === 0}>
           Clean
         </Button>
-        <Button
-          variant="outlined"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={handleAddRow}
-        >
+        <Button variant="outlined" color="primary" startIcon={<AddIcon />} onClick={handleAddRow}>
           Add New Book
         </Button>
       </Box>
 
-      <Dialog
-        open={cleanDialogOpen}
-        onClose={handleCleanCancel}
-      >
+      <Dialog open={cleanDialogOpen} onClose={handleCleanCancel}>
         <DialogTitle>Clear Table</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Are you sure you want to clear all books from the table? This action cannot be undone.
-          </DialogContentText>
+          <DialogContentText>Are you sure you want to clear all books from the table? This action cannot be undone.</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCleanCancel}>Cancel</Button>
@@ -189,4 +112,3 @@ export function BookTable({ books, onBooksChange, onThumbnailClick }: BookTableP
     </Box>
   );
 }
-

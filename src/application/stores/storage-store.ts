@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useAppStore, AppState } from './app-store';
-import { IndexedDbStorageRepository } from '../../infrastructure/repositories/indexed-db-storage-repository';
+import { useAppStore, type AppState } from '@/application/stores';
+import { IndexedDbStorageRepository } from '@/infrastructure/repositories';
 
 const storageRepo = new IndexedDbStorageRepository();
 const DEBOUNCE_MS = 500;

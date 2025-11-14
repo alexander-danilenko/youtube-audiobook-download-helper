@@ -2,8 +2,8 @@
 
 import { IconButton, Tooltip } from '@mui/material';
 import { Brightness4, Brightness7 } from '@mui/icons-material';
-import { useThemeStore } from '../config/theme-store';
-import { useTranslation, useTranslationString } from '../i18n/use-translation';
+import { useThemeStore } from '@/config/theme-store';
+import { useTranslation, useTranslationString } from '@/i18n';
 
 export function ThemeSwitcher() {
   const { t } = useTranslation();

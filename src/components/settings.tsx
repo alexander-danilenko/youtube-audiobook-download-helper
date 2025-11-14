@@ -2,8 +2,8 @@
 
 import { Typography, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Stack } from '@mui/material';
 import { FilenameTemplateInput } from './filename-template-input';
-import { CookiesBrowser } from '../application/stores/app-store';
-import { useTranslation } from '../i18n/use-translation';
+import { CookiesBrowser } from '@/application/stores';
+import { useTranslation } from '@/i18n';
 
 interface SettingsProps {
   filenameTemplate: string;

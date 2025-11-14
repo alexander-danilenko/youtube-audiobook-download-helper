@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Menu, MenuItem, IconButton } from '@mui/material';
 import { Edit as EditIcon } from '@mui/icons-material';
-import { useTranslation, useTranslationString } from '../i18n/use-translation';
+import { useTranslation, useTranslationString } from '@/i18n';
 
 interface TextTransformMenuProps {
   onTransform: (transformedText: string) => void;

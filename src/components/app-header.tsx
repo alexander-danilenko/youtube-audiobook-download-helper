@@ -2,11 +2,10 @@
 
 import { AppBar, Typography, Box, Container, Select, MenuItem, FormControl, IconButton } from '@mui/material';
 import { GitHub as GitHubIcon } from '@mui/icons-material';
-import { useTranslation } from '../i18n/use-translation';
+import { useTranslation, type Language } from '@/i18n';
 import { useRouter, useParams, usePathname } from 'next/navigation';
-import { Language } from '../i18n/translations';
 import { ThemeSwitcher } from './theme-switcher';
-import { useBasePath } from '../hooks/use-base-path';
+import { useBasePath } from '@/hooks';
 
 export function AppHeader() {
   const { t } = useTranslation();

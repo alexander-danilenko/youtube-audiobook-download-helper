@@ -2,7 +2,7 @@
 
 import { Box, Container, Typography, Link, Stack, Divider } from '@mui/material';
 import { GitHub as GitHubIcon } from '@mui/icons-material';
-import { useTranslation } from '../i18n/use-translation';
+import { useTranslation } from '@/i18n';
 
 export function AppFooter() {
   const { t } = useTranslation();

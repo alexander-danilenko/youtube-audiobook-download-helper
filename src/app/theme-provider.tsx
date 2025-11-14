@@ -1,7 +1,7 @@
 'use client';
 
 import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
-import { useThemeStore } from '../config/theme-store';
+import { useThemeStore } from '@/config/theme-store';
 
 const createAppTheme = (mode: 'light' | 'dark') => {
   const isDark = mode === 'dark';

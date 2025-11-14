@@ -1,5 +1,5 @@
 import { injectable } from 'tsyringe';
-import { IThumbnailRepository } from '../../domain/repositories/i-thumbnail-repository';
+import { IThumbnailRepository } from '@/domain/repositories';
 
 @injectable()
 export class YoutubeThumbnailRepository implements IThumbnailRepository {

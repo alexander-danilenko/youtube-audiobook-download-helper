@@ -1,5 +1,5 @@
 import { BookDto } from './book-dto';
-import { CookiesBrowser } from '../stores/app-store';
+import { CookiesBrowser } from '@/application/stores';
 
 export interface ScriptGenerationDto {
   books: BookDto[];

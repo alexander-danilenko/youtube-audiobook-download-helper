@@ -1,10 +1,9 @@
 import 'reflect-metadata';
 import { container } from 'tsyringe';
-import { ScriptGeneratorService } from '../../application/services/script-generator-service';
-import { GenerateShellScriptUseCase } from '../../application/use-cases/generate-shell-script-use-case';
-import { FetchYouTubeMetadataUseCase } from '../../application/use-cases/fetch-youtube-metadata-use-case';
-import type { IYouTubeMetadataRepository } from '../../domain/repositories/i-youtube-metadata-repository';
-import { YoutubeMetadataRepository } from '../repositories/youtube-metadata-repository';
+import { ScriptGeneratorService } from '@/application/services';
+import { GenerateShellScriptUseCase, FetchYouTubeMetadataUseCase } from '@/application/use-cases';
+import type { IYouTubeMetadataRepository } from '@/domain/repositories';
+import { YoutubeMetadataRepository } from '@/infrastructure/repositories';
 
 // Register repositories
 container.registerSingleton<IYouTubeMetadataRepository>('IYouTubeMetadataRepository', YoutubeMetadataRepository);
@@ -17,4 +16,3 @@ container.registerSingleton(GenerateShellScriptUseCase);
 container.registerSingleton(FetchYouTubeMetadataUseCase);
 
 export { container };
-

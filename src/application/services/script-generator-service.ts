@@ -1,5 +1,5 @@
-import { BookDto } from '../dto/book-dto';
-import { CookiesBrowser } from '../stores/app-store';
+import { BookDto } from '@/application/dto';
+import { CookiesBrowser } from '@/application/stores';
 
 export class ScriptGeneratorService {
   private readonly defaultTemplate = '$author - [$series - $series_num] - $title [$narrator].%(ext)s';

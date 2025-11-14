@@ -1,5 +1,5 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import { CookiesBrowser } from '../../application/stores/app-store';
+import { CookiesBrowser } from '@/application/stores';
 
 interface AppStateDb extends DBSchema {
   'app-state': {

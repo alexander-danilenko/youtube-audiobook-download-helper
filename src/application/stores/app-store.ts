@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { BookDto } from '../dto/book-dto';
+import { BookDto } from '@/application/dto';
 
 export const DEFAULT_FILENAME_TEMPLATE = '$author - [$series - $series_num] - $title [$narrator].%(ext)s';
 

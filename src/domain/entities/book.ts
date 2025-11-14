@@ -1,5 +1,4 @@
-import { YoutubeUrl } from '../value-objects/youtube-url';
-import { BookMetadata } from '../value-objects/book-metadata';
+import { YoutubeUrl, BookMetadata } from '@/domain/value-objects';
 
 export class Book {
   public readonly url: YoutubeUrl;

@@ -1,6 +1,6 @@
 import { injectable, inject } from 'tsyringe';
-import type { IYouTubeMetadataRepository } from '../../domain/repositories/i-youtube-metadata-repository';
-import { YoutubeUrl } from '../../domain/value-objects/youtube-url';
+import type { IYouTubeMetadataRepository } from '@/domain/repositories';
+import { YoutubeUrl } from '@/domain/value-objects';
 
 export interface FetchYouTubeMetadataResult {
   title: string;

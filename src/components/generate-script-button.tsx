@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { Button, Box, Snackbar, Alert } from '@mui/material';
 import { ContentCopy as ContentCopyIcon } from '@mui/icons-material';
-import { BookDto, bookDtoSchema } from '../application/dto/book-dto';
-import { CookiesBrowser } from '../application/stores/app-store';
-import { useScriptGenerator } from '../hooks/use-script-generator';
-import { useTranslation } from '../i18n/use-translation';
+import { BookDto } from '@/application/dto';
+import { CookiesBrowser } from '@/application/stores';
+import { BookService } from '@/application/services';
+import { useScriptGenerator } from '@/hooks/use-script-generator';
+import { useTranslation } from '@/i18n';
+import { useMemo } from 'react';
 
 interface GetDownloadCommandButtonProps {
   books: BookDto[];
@@ -17,20 +19,15 @@ interface GetDownloadCommandButtonProps {
 export function GetDownloadCommandButton({ books, filenameTemplate, cookiesBrowser }: GetDownloadCommandButtonProps) {
   const { t } = useTranslation();
   const { copyDownloadString } = useScriptGenerator();
+  const bookService = useMemo(() => new BookService(), []);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState<string>('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
 
-  // Validate all books using zod schema
-  const validationResults = books.map((book) => ({
-    book,
-    result: bookDtoSchema.safeParse(book),
-  }));
-
-  const validBooks = validationResults.filter(({ result }) => result.success).map(({ book }) => book) as BookDto[];
-
-  const hasInvalidBooks = validationResults.some(({ result }) => !result.success);
-
+  // Validate all books using BookService
+  const validationResults = bookService.validateBooks(books);
+  const validBooks = bookService.getValidBooks(books);
+  const hasInvalidBooks = bookService.hasInvalidBooks(books);
   const isDisabled = validBooks.length === 0 || hasInvalidBooks;
 
   const handleClick = async (): Promise<void> => {
@@ -49,14 +46,7 @@ export function GetDownloadCommandButton({ books, filenameTemplate, cookiesBrows
   return (
     <>
       <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-        <Button
-          onClick={handleClick}
-          variant="contained"
-          color="primary"
-          size="large"
-          startIcon={<ContentCopyIcon />}
-          disabled={isDisabled}
-        >
+        <Button onClick={handleClick} variant="contained" color="primary" size="large" startIcon={<ContentCopyIcon />} disabled={isDisabled}>
           {t('script_generation_get_download_command')}
         </Button>
         {hasInvalidBooks && (
@@ -78,4 +68,3 @@ export function GetDownloadCommandButton({ books, filenameTemplate, cookiesBrows
     </>
   );
 }
-

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import React from 'react';
 import { useLanguageStore } from './language-store';
 import { translations, TranslationKey } from './translations';
-import { MarkdownText } from '../components/markdown-text';
+import { MarkdownText } from '@/components/markdown-text';
 
 /**
  * Replaces placeholders in translation strings

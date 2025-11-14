@@ -1,9 +1,9 @@
 'use client';
 
 import { TextField, FormHelperText, Box, Button, Typography, InputAdornment } from '@mui/material';
-import { DEFAULT_FILENAME_TEMPLATE } from '../application/stores/app-store';
+import { DEFAULT_FILENAME_TEMPLATE } from '@/application/stores';
 import { TextTransformMenu } from './text-transform-menu';
-import { useTranslation } from '../i18n/use-translation';
+import { useTranslation } from '@/i18n';
 
 interface FilenameTemplateInputProps {
   value: string;
