@@ -38,11 +38,15 @@ function replacePlaceholders(
 
     // Add placeholder replacement
     const key = match[1];
-    const replacement = values[key];
-    if (replacement !== undefined) {
-      parts.push(replacement);
+    if (key) {
+      const replacement = values[key];
+      if (replacement !== undefined) {
+        parts.push(replacement);
+      } else {
+        parts.push(match[0]); // Keep original if no replacement
+      }
     } else {
-      parts.push(match[0]); // Keep original if no replacement
+      parts.push(match[0]); // Keep original if no key found
     }
 
     currentIndex = regex.lastIndex;
@@ -98,53 +102,56 @@ export function useTranslation() {
    * @param options - Optional rendering options (variant, component, sx)
    */
   const tMarkdown = useMemo(
-    () => (
-      key: TranslationKey,
-      values?: Record<string, string | React.ReactNode>,
-      options?: {
-        variant?: 'body1' | 'body2' | 'caption' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
-        component?: React.ElementType;
-        sx?: React.CSSProperties;
-      }
-    ): React.ReactElement => {
-      const translation = translations[language][key];
+    () => {
+      const MarkdownTranslation = (
+        key: TranslationKey,
+        values?: Record<string, string | React.ReactNode>,
+        options?: {
+          variant?: 'body1' | 'body2' | 'caption' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+          component?: React.ElementType;
+          sx?: React.CSSProperties;
+        }
+      ): React.ReactElement => {
+        const translation = translations[language][key];
 
-      if (!translation) {
-        console.warn(`Translation missing for key: ${key}`);
-        return <MarkdownText {...options}>{key}</MarkdownText>;
-      }
+        if (!translation) {
+          console.warn(`Translation missing for key: ${key}`);
+          return <MarkdownText {...options}>{key}</MarkdownText>;
+        }
 
-      // Separate string and ReactNode placeholders
-      const stringPlaceholders: Record<string, string> = {};
-      const reactNodePlaceholders: Record<string, React.ReactNode> = {};
+        // Separate string and ReactNode placeholders
+        const stringPlaceholders: Record<string, string> = {};
+        const reactNodePlaceholders: Record<string, React.ReactNode> = {};
 
-      if (values) {
-        Object.entries(values).forEach(([k, v]) => {
-          if (typeof v === 'string') {
-            stringPlaceholders[k] = v;
-          } else {
-            reactNodePlaceholders[k] = v;
-          }
+        if (values) {
+          Object.entries(values).forEach(([k, v]) => {
+            if (typeof v === 'string') {
+              stringPlaceholders[k] = v;
+            } else {
+              reactNodePlaceholders[k] = v;
+            }
+          });
+        }
+
+        // Replace string placeholders first
+        let processedTranslation = translation;
+        Object.entries(stringPlaceholders).forEach(([k, v]) => {
+          processedTranslation = processedTranslation.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
         });
-      }
 
-      // Replace string placeholders first
-      let processedTranslation = translation;
-      Object.entries(stringPlaceholders).forEach(([k, v]) => {
-        processedTranslation = processedTranslation.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
-      });
+        // If we have ReactNode placeholders, pass them to MarkdownText
+        if (Object.keys(reactNodePlaceholders).length > 0) {
+          return (
+            <MarkdownText {...options} placeholders={reactNodePlaceholders}>
+              {processedTranslation}
+            </MarkdownText>
+          );
+        }
 
-      // If we have ReactNode placeholders, pass them to MarkdownText
-      if (Object.keys(reactNodePlaceholders).length > 0) {
-        return (
-          <MarkdownText {...options} placeholders={reactNodePlaceholders}>
-            {processedTranslation}
-          </MarkdownText>
-        );
-      }
-
-      // Simple case: just render markdown
-      return <MarkdownText {...options}>{processedTranslation}</MarkdownText>;
+        // Simple case: just render markdown
+        return <MarkdownText {...options}>{processedTranslation}</MarkdownText>;
+      };
+      return MarkdownTranslation;
     },
     [language]
   );

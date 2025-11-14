@@ -26,7 +26,6 @@ export function GetDownloadCommandButton({ books, filenameTemplate, cookiesBrows
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
 
   // Validate all books using BookService
-  const validationResults = bookService.validateBooks(books);
   const validBooks = bookService.getValidBooks(books);
   const hasInvalidBooks = bookService.hasInvalidBooks(books);
   const isDisabled = validBooks.length === 0 || hasInvalidBooks;

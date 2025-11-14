@@ -3,7 +3,6 @@ import "../globals.css";
 import EmotionRegistry from "../emotion-registry";
 import { ThemeProvider } from "../theme-provider";
 import { CssBaseline } from "@mui/material";
-import { type Language } from "@/i18n";
 
 export const metadata: Metadata = {
   title: "YT Audiobook Download Helper",
@@ -12,7 +11,6 @@ export const metadata: Metadata = {
 
 export default function LangLayout({
   children,
-  params,
 }: {
   children: React.ReactNode;
   params: Promise<{ lang: string }> | { lang: string };

@@ -1,11 +1,12 @@
 'use client';
 
-import { TextField, Box, Paper, Typography, IconButton, InputAdornment, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Button, Radio, FormControlLabel, Collapse, Tooltip } from '@mui/material';
+import React, { useState } from 'react';
+import { TextField, Box, Paper, Typography, IconButton, InputAdornment, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Button, Radio, FormControlLabel, Collapse, Tooltip, Snackbar, Alert } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import ContentPasteIcon from '@mui/icons-material/ContentPaste';
+import ClearIcon from '@mui/icons-material/Clear';
 import Image from 'next/image';
 import { BookDto } from '@/application/dto';
 import { useBookCard } from '@/hooks/use-book-card';
@@ -23,6 +24,9 @@ interface BookCardProps {
 export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipAutoMetadataFetch = false }: BookCardProps) {
   const { t } = useTranslation();
   const tString = useTranslationString();
+  const urlInputRef = React.useRef<HTMLInputElement>(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
 
   const {
     localBook,
@@ -42,7 +46,6 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
     metadataError,
     handleChange,
     handleUrlBlur,
-    handlePasteClick,
     handleUrlPaste,
     handleThumbnailLoad,
     handleThumbnailError,
@@ -51,7 +54,15 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
     setComparisonDialogOpen,
     toggleBookCollapsed,
     attemptFetchMetadata,
-  } = useBookCard({ book, onBookChange, skipAutoMetadataFetch });
+  } = useBookCard({ 
+    book, 
+    onBookChange, 
+    skipAutoMetadataFetch,
+    onMetadataFetchSuccess: () => {
+      setSnackbarMessage(t('book_card_metadata_fetch_success') as string);
+      setSnackbarOpen(true);
+    }
+  });
 
   const handleThumbnailClick = (): void => {
     if (fullSizeThumbnailUrl) {
@@ -187,10 +198,14 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
                   </>
                 }
                 value={localBook.url}
+                onChange={(e) => handleChange('url', e.target.value)}
+                onBlur={handleUrlBlur}
                 fullWidth
                 variant="outlined"
                 size="small"
-                disabled={true}
+                disabled={isLoading}
+                onPaste={handleUrlPaste}
+                inputRef={urlInputRef}
                 helperText={fieldErrors.url || t('book_card_youtube_url_helper')}
                 error={Boolean(fieldErrors.url || (!localBook.url?.trim() || (isUrlValid && (metadataError || (!!thumbnailUrl && !isThumbnailLoaded)))))}
                 sx={{
@@ -211,22 +226,23 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
                   startAdornment: (
                     <InputAdornment position="start">
                       {localBook.url?.trim() ? (
-                        <IconButton
-                          size="small"
-                          onClick={handlePasteClick}
-                          disabled={false}
-                          sx={{ pointerEvents: 'auto' }}
-                          aria-label={tString('book_card_paste_url')}
-                        >
-                          <ContentPasteIcon fontSize="small" />
-                        </IconButton>
-                      ) : (
-                        <Tooltip title={tString('book_card_paste_url')}>
-                          <IconButton size="small" onClick={handlePasteClick} disabled={false} sx={{ pointerEvents: 'auto' }}>
-                            <ContentPasteIcon fontSize="small" />
+                        <Tooltip title={tString('book_card_clear_url')}>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              // Clear immediately without debounce to prevent value from being restored
+                              handleChange('url', '', { skipDebounce: true });
+                            }}
+                            disabled={isLoading}
+                            sx={{ pointerEvents: 'auto' }}
+                            aria-label={tString('book_card_clear_url')}
+                          >
+                            <ClearIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                      )}
+                      ) : null}
                     </InputAdornment>
                   ),
                   endAdornment: (
@@ -424,6 +440,16 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
           </Button>
         </DialogActions>
       </Dialog>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </>
   );
 }

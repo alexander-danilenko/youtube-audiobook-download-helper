@@ -1,5 +1,3 @@
-import { usePathname } from 'next/navigation';
-
 /**
  * Hook to detect the base path when the site is served from a subdirectory.
  * This works for static exports served from subdirectories (e.g., /my-app/en).
@@ -7,8 +5,6 @@ import { usePathname } from 'next/navigation';
  * @returns The base path (e.g., '/my-app') or empty string if served from root
  */
 export function useBasePath(): string {
-  const pathname = usePathname();
-
   if (typeof window === 'undefined') {
     return process.env.NEXT_PUBLIC_BASE_PATH || '';
   }

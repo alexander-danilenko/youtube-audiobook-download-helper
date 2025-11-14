@@ -14,6 +14,40 @@ interface MarkdownTextProps {
   placeholders?: Record<string, React.ReactNode>;
 }
 
+// Types for react-markdown component props
+interface MarkdownLinkProps {
+  href?: string;
+  target?: string;
+  rel?: string;
+  children?: React.ReactNode;
+}
+
+interface MarkdownParagraphProps {
+  children?: React.ReactNode;
+}
+
+interface MarkdownTextElementProps {
+  children?: React.ReactNode;
+}
+
+interface MarkdownImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+  src?: string | Blob;
+  alt?: string;
+  children?: React.ReactNode;
+}
+
+interface MarkdownListProps {
+  children?: React.ReactNode;
+}
+
+interface MarkdownHeadingProps {
+  children?: React.ReactNode;
+}
+
+interface MarkdownBlockquoteProps {
+  children?: React.ReactNode;
+}
+
 /**
  * Component that renders markdown text with Material-UI Typography styling
  * Supports all standard markdown features including links, images, bold, italic, etc.
@@ -56,7 +90,7 @@ export function MarkdownText({ children, variant = 'body1', component, sx, place
 
       // Add placeholder ReactNode if it exists
       const placeholderKey = match[1];
-      if (placeholders[placeholderKey]) {
+      if (placeholderKey && placeholders[placeholderKey]) {
         parts.push(
           <React.Fragment key={`placeholder-${placeholderKey}-${match.index}`}>
             {placeholders[placeholderKey]}
@@ -110,55 +144,60 @@ function getMarkdownComponents(variant: TypographyProps['variant'] = 'body1') {
   return {
     // Render links using Material-UI Link component
     // Automatically add target="_blank" and rel="noopener noreferrer" for external links
-    a: ({ ...props }: any) => {
-      const href = props.href || '';
-      const isExternal = href.startsWith('http://') || href.startsWith('https://');
+    a: ({ href, target, rel, children }: MarkdownLinkProps) => {
+      const hrefValue = href || '';
+      const isExternal = hrefValue.startsWith('http://') || hrefValue.startsWith('https://');
       const linkProps = isExternal 
         ? { target: '_blank', rel: 'noopener noreferrer' }
-        : { target: props.target, rel: props.rel };
+        : { target, rel };
       
       return (
-        <Link href={href} {...linkProps} underline="hover">
-          {props.children}
+        <Link href={hrefValue} {...linkProps} underline="hover">
+          {children}
         </Link>
       );
     },
     // Render paragraphs with proper spacing
-    p: ({ ...props }: any) => (
+    p: ({ children }: MarkdownParagraphProps) => (
       <Typography variant={variant} component="p" sx={{ mb: 2, '&:last-child': { mb: 0 } }}>
-        {props.children}
+        {children}
       </Typography>
     ),
     // Render strong as strong (default is fine)
-    strong: ({ ...props }: any) => <strong>{props.children}</strong>,
+    strong: ({ children }: MarkdownTextElementProps) => <strong>{children}</strong>,
     // Render emphasis (italic) as em (default is fine)
-    em: ({ ...props }: any) => <em>{props.children}</em>,
+    em: ({ children }: MarkdownTextElementProps) => <em>{children}</em>,
     // Render images
-    img: ({ ...props }: any) => (
-      <img src={props.src} alt={props.alt} style={{ maxWidth: '100%', height: 'auto' }} />
-    ),
+    // Using img instead of Next.js Image because markdown images don't have known dimensions
+    // and may come from external sources that can't be optimized by Next.js Image
+    img: (props: MarkdownImageProps) => {
+      const { src, alt, ...rest } = props;
+      // Convert Blob to object URL if needed
+      const imageSrc = src instanceof Blob ? URL.createObjectURL(src) : src;
+      return <img src={imageSrc} alt={alt} style={{ maxWidth: '100%', height: 'auto' }} {...rest} />;
+    },
     // Render code blocks (always inline)
-    code: ({ ...props }: any) => (
+    code: ({ children }: MarkdownTextElementProps) => (
       <code style={{ backgroundColor: 'rgba(0, 0, 0, 0.06)', padding: '2px 4px', borderRadius: '3px', fontFamily: 'monospace' }}>
-        {props.children}
+        {children}
       </code>
     ),
     // Render lists
-    ul: ({ ...props }: any) => <ul style={{ paddingLeft: '20px' }}>{props.children}</ul>,
-    ol: ({ ...props }: any) => <ol style={{ paddingLeft: '20px' }}>{props.children}</ol>,
+    ul: ({ children }: MarkdownListProps) => <ul style={{ paddingLeft: '20px' }}>{children}</ul>,
+    ol: ({ children }: MarkdownListProps) => <ol style={{ paddingLeft: '20px' }}>{children}</ol>,
     // Render list items
-    li: ({ ...props }: any) => <li>{props.children}</li>,
+    li: ({ children }: MarkdownTextElementProps) => <li>{children}</li>,
     // Render headings (h1-h6)
-    h1: ({ ...props }: any) => <h1 style={{ fontSize: '2em', fontWeight: 'bold', margin: '16px 0 8px 0' }}>{props.children}</h1>,
-    h2: ({ ...props }: any) => <h2 style={{ fontSize: '1.5em', fontWeight: 'bold', margin: '14px 0 6px 0' }}>{props.children}</h2>,
-    h3: ({ ...props }: any) => <h3 style={{ fontSize: '1.25em', fontWeight: 'bold', margin: '12px 0 4px 0' }}>{props.children}</h3>,
-    h4: ({ ...props }: any) => <h4 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '10px 0 4px 0' }}>{props.children}</h4>,
-    h5: ({ ...props }: any) => <h5 style={{ fontSize: '1em', fontWeight: 'bold', margin: '8px 0 2px 0' }}>{props.children}</h5>,
-    h6: ({ ...props }: any) => <h6 style={{ fontSize: '0.9em', fontWeight: 'bold', margin: '8px 0 2px 0' }}>{props.children}</h6>,
+    h1: ({ children }: MarkdownHeadingProps) => <h1 style={{ fontSize: '2em', fontWeight: 'bold', margin: '16px 0 8px 0' }}>{children}</h1>,
+    h2: ({ children }: MarkdownHeadingProps) => <h2 style={{ fontSize: '1.5em', fontWeight: 'bold', margin: '14px 0 6px 0' }}>{children}</h2>,
+    h3: ({ children }: MarkdownHeadingProps) => <h3 style={{ fontSize: '1.25em', fontWeight: 'bold', margin: '12px 0 4px 0' }}>{children}</h3>,
+    h4: ({ children }: MarkdownHeadingProps) => <h4 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '10px 0 4px 0' }}>{children}</h4>,
+    h5: ({ children }: MarkdownHeadingProps) => <h5 style={{ fontSize: '1em', fontWeight: 'bold', margin: '8px 0 2px 0' }}>{children}</h5>,
+    h6: ({ children }: MarkdownHeadingProps) => <h6 style={{ fontSize: '0.9em', fontWeight: 'bold', margin: '8px 0 2px 0' }}>{children}</h6>,
     // Render blockquotes
-    blockquote: ({ ...props }: any) => (
+    blockquote: ({ children }: MarkdownBlockquoteProps) => (
       <blockquote style={{ borderLeft: '4px solid #ccc', margin: '8px 0', paddingLeft: '16px', color: '#666' }}>
-        {props.children}
+        {children}
       </blockquote>
     ),
     // Render horizontal rules

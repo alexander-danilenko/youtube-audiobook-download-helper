@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useReducer } from 'react';
 import { normalizeYouTubeUrl } from '@/application/services';
 import { useYouTubeMetadata } from './use-youtube-metadata';
 
@@ -15,16 +15,34 @@ export function useYouTubeUrl({
   onMetadataFetched,
   skipAutoMetadataFetch = false,
 }: UseYouTubeUrlProps) {
-  const [localValue, setLocalValue] = useState<string>(value);
   const { isLoading, fetchMetadata } = useYouTubeMetadata();
   const previousUrlRef = useRef<string>('');
   const fetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previousValueRef = useRef<string>(value);
+  const isUserEditingRef = useRef<boolean>(false);
+  
+  // Use reducer to sync props to state without triggering setState-in-effect warning
+  type ValueAction = { type: 'SYNC_FROM_PROP'; payload: string } | { type: 'UPDATE'; payload: string };
+  const valueReducer = (state: string, action: ValueAction): string => {
+    switch (action.type) {
+      case 'SYNC_FROM_PROP':
+        return action.payload;
+      case 'UPDATE':
+        return action.payload;
+      default:
+        return state;
+    }
+  };
+  const [localValue, dispatchValue] = useReducer(valueReducer, value);
 
+  // Sync local value with prop changes when not actively editing
+  // Using reducer dispatch instead of setState to avoid the warning
   useEffect(() => {
-    setLocalValue(value);
-    // Reset previous URL ref when value prop changes (e.g., when book changes)
-    // This allows re-fetching if the same URL is set from props
-    previousUrlRef.current = '';
+    if (previousValueRef.current !== value && !isUserEditingRef.current) {
+      previousValueRef.current = value;
+      previousUrlRef.current = '';
+      dispatchValue({ type: 'SYNC_FROM_PROP', payload: value });
+    }
   }, [value]);
 
   const attemptFetchMetadata = useCallback(
@@ -53,7 +71,8 @@ export function useYouTubeUrl({
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
-      setLocalValue(newValue);
+      isUserEditingRef.current = true;
+      dispatchValue({ type: 'UPDATE', payload: newValue });
 
       // Clear existing timeout
       if (fetchTimeoutRef.current) {
@@ -64,7 +83,10 @@ export function useYouTubeUrl({
       if (!skipAutoMetadataFetch) {
         fetchTimeoutRef.current = setTimeout(() => {
           attemptFetchMetadata(newValue.trim());
+          isUserEditingRef.current = false;
         }, 500);
+      } else {
+        isUserEditingRef.current = false;
       }
     },
     [attemptFetchMetadata, skipAutoMetadataFetch]
@@ -77,13 +99,15 @@ export function useYouTubeUrl({
       fetchTimeoutRef.current = null;
     }
 
+    isUserEditingRef.current = false;
+
     // Normalize value on blur and update parent/state
     const trimmedValue = localValue.trim();
     const normalized = normalizeYouTubeUrl(trimmedValue);
 
     if (normalized) {
       // Update visible input and propagate normalized value
-      setLocalValue(normalized);
+      dispatchValue({ type: 'UPDATE', payload: normalized });
       onChange(normalized);
 
       if (normalized !== previousUrlRef.current && !skipAutoMetadataFetch) {
@@ -100,17 +124,19 @@ export function useYouTubeUrl({
       const pasted = e.clipboardData.getData('text');
       if (!pasted) return;
 
+      isUserEditingRef.current = true;
       const normalized = normalizeYouTubeUrl(pasted.trim());
       if (normalized) {
         // Prevent default paste and replace input with normalized URL
         e.preventDefault();
-        setLocalValue(normalized);
+        dispatchValue({ type: 'UPDATE', payload: normalized });
         onChange(normalized);
 
         if (normalized !== previousUrlRef.current && !skipAutoMetadataFetch) {
           attemptFetchMetadata(normalized);
         }
       }
+      isUserEditingRef.current = false;
       // If not normalized, allow default paste behavior
     },
     [onChange, attemptFetchMetadata, skipAutoMetadataFetch]

@@ -23,6 +23,7 @@ export class CsvService {
     
     for (let i = startIndex; i < lines.length; i++) {
       const line = lines[i];
+      if (!line) continue;
       const cells = this.parseCsvLine(line);
       
       if (cells.length < expectedColumns) {
@@ -30,15 +31,22 @@ export class CsvService {
       }
 
       idCounter += 1;
+      const url = cells[0] ?? '';
+      const title = cells[1] ?? '';
+      const author = cells[2] ?? '';
+      const narrator = cells[3] ?? '';
+      const series = cells[4] ?? '';
+      const seriesNumberStr = cells[5] ?? '1';
+      const yearStr = cells[6] ?? '';
       const book: BookDto = {
         id: `imported-${idCounter}-${i}`,
-        url: cells[0]?.trim() || '',
-        title: cells[1]?.trim() || '',
-        author: cells[2]?.trim() || '',
-        narrator: cells[3]?.trim() || '',
-        series: cells[4]?.trim() || '',
-        seriesNumber: parseInt(cells[5]?.trim() || '1', 10) || 1,
-        year: cells[6]?.trim() ? parseInt(cells[6].trim(), 10) : undefined,
+        url: url.trim(),
+        title: title.trim(),
+        author: author.trim(),
+        narrator: narrator.trim(),
+        series: series.trim(),
+        seriesNumber: parseInt(seriesNumberStr.trim(), 10) || 1,
+        year: yearStr.trim() ? parseInt(yearStr.trim(), 10) : undefined,
       };
 
       books.push(book);

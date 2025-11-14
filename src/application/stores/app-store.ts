@@ -84,7 +84,7 @@ export const useAppStore = create<AppStore>((set) => ({
     bookIds.forEach(id => newCollapsed.delete(id));
     return { collapsedBookIds: newCollapsed };
   }),
-  collapseAllBooks: (bookIds: string[]) => set((state) => {
+  collapseAllBooks: (bookIds: string[]) => set(() => {
     const newCollapsed = new Set<string>(bookIds);
     return { collapsedBookIds: newCollapsed };
   }),

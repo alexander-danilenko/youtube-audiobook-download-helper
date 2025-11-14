@@ -67,7 +67,7 @@ export class ScriptGeneratorService {
     result = result.replace(/\$year/g, this.sanitizeForFilename(book.year?.toString() || ''));
 
     // Handle optional brackets - remove empty brackets and their contents after variable substitution
-    result = result.replace(/\[([^\]]*)\]/g, (match, content) => {
+    result = result.replace(/\[([^\]]*)\]/g, (_match, content) => {
       // Remove variables that were empty and separators, then check if anything remains
       const cleaned = content
         .trim()

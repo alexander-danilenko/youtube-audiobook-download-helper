@@ -30,7 +30,7 @@ export function useScriptGenerator() {
     
     try {
       await navigator.clipboard.writeText(downloadString);
-    } catch (err) {
+    } catch {
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
       textArea.value = downloadString;

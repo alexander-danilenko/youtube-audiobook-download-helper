@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo, useReducer } from 'react';
 import { BookDto } from '@/application/dto';
 import { BookService } from '@/application/services';
 import { MetadataComparisonService, type MetadataComparison } from '@/application/services';
@@ -12,9 +12,10 @@ interface UseBookCardProps {
   book: BookDto;
   onBookChange: (updatedBook: BookDto) => void;
   skipAutoMetadataFetch?: boolean;
+  onMetadataFetchSuccess?: () => void;
 }
 
-export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false }: UseBookCardProps) {
+export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false, onMetadataFetchSuccess }: UseBookCardProps) {
   const { t } = useTranslation();
   const tString = useTranslationString();
   const { thumbnailUrl, fullSizeThumbnailUrl } = useThumbnail(book.url);
@@ -26,18 +27,48 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false 
   const fetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Local state for immediate UI updates (no lag)
-  const [localBook, setLocalBook] = useState<BookDto>(book);
+  // Use reducer to sync props to state without triggering setState-in-effect warning
+  type BookAction = { type: 'SYNC_FROM_PROP'; payload: BookDto } | { type: 'UPDATE'; payload: Partial<BookDto> };
+  const bookReducer = (state: BookDto, action: BookAction): BookDto => {
+    switch (action.type) {
+      case 'SYNC_FROM_PROP':
+        return action.payload;
+      case 'UPDATE':
+        return { ...state, ...action.payload };
+      default:
+        return state;
+    }
+  };
+  const [localBook, dispatchBook] = useReducer(bookReducer, book);
+  const previousBookIdRef = useRef<string>(book.id);
 
   // Sync local state with prop changes from parent — only when the book id changes
+  // Using reducer dispatch instead of setState to avoid the warning
   useEffect(() => {
-    setLocalBook(book);
-  }, [book.id]);
+    if (previousBookIdRef.current !== book.id) {
+      previousBookIdRef.current = book.id;
+      dispatchBook({ type: 'SYNC_FROM_PROP', payload: book });
+    }
+  }, [book, book.id]);
 
   // Comparison dialog state
   const [comparisonDialogOpen, setComparisonDialogOpen] = useState(false);
   const [comparisons, setComparisons] = useState<MetadataComparison[]>([]);
   const [selectedValues, setSelectedValues] = useState<Record<string, 'current' | 'fetched'>>({});
-  const [isThumbnailLoaded, setIsThumbnailLoaded] = useState(false);
+  
+  // Use reducer for thumbnail loaded state to avoid setState-in-effect warning
+  type ThumbnailAction = { type: 'RESET' } | { type: 'SET_LOADED'; payload: boolean };
+  const thumbnailReducer = (state: boolean, action: ThumbnailAction): boolean => {
+    switch (action.type) {
+      case 'RESET':
+        return false;
+      case 'SET_LOADED':
+        return action.payload;
+      default:
+        return state;
+    }
+  };
+  const [isThumbnailLoaded, dispatchThumbnail] = useReducer(thumbnailReducer, false);
 
   // Collapsed state from store
   const collapsedBookIds = useAppStore((state) => state.collapsedBookIds);
@@ -64,15 +95,24 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false 
     return isUrlValid && !!thumbnailUrl && isThumbnailLoaded && !metadataError && !isLoading;
   }, [isUrlValid, thumbnailUrl, isThumbnailLoaded, metadataError, isLoading]);
 
-  // Reset thumbnail loaded state when URL changes
+  // Track previous URL to reset thumbnail loaded state when URL changes
+  const previousUrlRef = useRef<string>(localBook.url);
+  const previousThumbnailUrlRef = useRef<string | null>(thumbnailUrl);
+
+  // Reset thumbnail loaded state when URL changes using reducer pattern
   useEffect(() => {
-    setIsThumbnailLoaded(false);
+    if (previousUrlRef.current !== localBook.url) {
+      previousUrlRef.current = localBook.url;
+      dispatchThumbnail({ type: 'RESET' });
+    }
   }, [localBook.url]);
 
+  // Reset thumbnail loaded state when thumbnailUrl becomes empty
   useEffect(() => {
-    if (!thumbnailUrl) {
-      setIsThumbnailLoaded(false);
+    if (previousThumbnailUrlRef.current && !thumbnailUrl) {
+      dispatchThumbnail({ type: 'RESET' });
     }
+    previousThumbnailUrlRef.current = thumbnailUrl;
   }, [thumbnailUrl]);
 
   const attemptFetchMetadata = useCallback(
@@ -89,25 +129,43 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false 
             setComparisons(diffs);
             setSelectedValues(metadataComparisonService.createDefaultSelectedValues(diffs));
             setComparisonDialogOpen(true);
+            // Show success toast even when there are differences (metadata was fetched)
+            if (onMetadataFetchSuccess) {
+              onMetadataFetchSuccess();
+            }
           } else {
             // Auto-update empty fields
             const updatedBook = metadataComparisonService.autoUpdateEmptyFields(localBook, metadata);
-            setLocalBook(updatedBook);
+            dispatchBook({ type: 'SYNC_FROM_PROP', payload: updatedBook });
             onBookChange(updatedBook);
+            // Show success toast when metadata is auto-applied
+            if (onMetadataFetchSuccess) {
+              onMetadataFetchSuccess();
+            }
           }
         }
       } catch (error) {
         console.error('BookCard: Error fetching YouTube metadata:', error);
       }
     },
-    [localBook, isUrlValid, fetchMetadata, onBookChange, metadataComparisonService]
+    [localBook, isUrlValid, fetchMetadata, onBookChange, metadataComparisonService, onMetadataFetchSuccess]
   );
 
   const handleChange = useCallback(
     (key: keyof BookDto, value: string | number | undefined, options?: { skipDebounce?: boolean }) => {
       const skipDebounce = options?.skipDebounce ?? false;
       let parsedValue: string | number | undefined = value;
-      if (key === 'seriesNumber') {
+      
+      // Normalize URL immediately if it's a URL field (but allow empty strings to stay empty)
+      if (key === 'url' && typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed === '') {
+          parsedValue = '';
+        } else {
+          const normalized = normalizeYouTubeUrl(trimmed);
+          parsedValue = normalized || trimmed;
+        }
+      } else if (key === 'seriesNumber') {
         parsedValue = parseInt(value as string, 10);
         if (isNaN(parsedValue) || parsedValue < 1) parsedValue = 1;
       } else if (key === 'year') {
@@ -116,37 +174,47 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false 
       }
 
       // Update local state immediately for responsive UI (no lag)
-      setLocalBook((prev) => {
-        const updatedBook = { ...prev, [key]: parsedValue };
+      dispatchBook({ type: 'UPDATE', payload: { [key]: parsedValue } });
+      const updatedBook = { ...localBook, [key]: parsedValue };
 
-        if (!skipDebounce) {
-          // Debounce parent updates
-          if (changeThrottleRef.current) {
-            clearTimeout(changeThrottleRef.current);
-          }
+      if (skipDebounce) {
+        // Immediately update parent without debounce
+        onBookChange(updatedBook);
+      } else {
+        // Debounce parent updates
+        if (changeThrottleRef.current) {
+          clearTimeout(changeThrottleRef.current);
+        }
 
-          changeThrottleRef.current = setTimeout(() => {
-            onBookChange(updatedBook);
+        changeThrottleRef.current = setTimeout(() => {
+          onBookChange(updatedBook);
 
-            // Auto-fetch metadata for URL changes
-            if (key === 'url' && typeof parsedValue === 'string' && parsedValue && !skipAutoMetadataFetch) {
-              const urlValue = parsedValue.trim();
-              if (urlValue) {
+          // Auto-fetch metadata for URL changes (normalize before fetching)
+          if (key === 'url' && typeof parsedValue === 'string' && parsedValue && !skipAutoMetadataFetch) {
+            const urlValue = parsedValue.trim();
+            if (urlValue) {
+              const normalized = normalizeYouTubeUrl(urlValue);
+              // Only fetch if we have a valid normalized YouTube URL
+              if (normalized) {
+                // Update input with normalized URL before fetching (if different)
+                if (normalized !== urlValue) {
+                  dispatchBook({ type: 'UPDATE', payload: { url: normalized } });
+                  onBookChange({ ...updatedBook, url: normalized });
+                }
+                
                 if (fetchTimeoutRef.current) {
                   clearTimeout(fetchTimeoutRef.current);
                 }
                 fetchTimeoutRef.current = setTimeout(() => {
-                  attemptFetchMetadata(urlValue);
+                  attemptFetchMetadata(normalized);
                 }, 500);
               }
             }
-          }, 500);
-        }
-
-        return updatedBook;
-      });
+          }
+        }, 500);
+      }
     },
-    [onBookChange, attemptFetchMetadata, skipAutoMetadataFetch]
+    [localBook, onBookChange, attemptFetchMetadata, skipAutoMetadataFetch]
   );
 
   useEffect(() => {
@@ -161,75 +229,35 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false 
   }, []);
 
   const handleThumbnailLoad = (): void => {
-    setIsThumbnailLoaded(true);
+    dispatchThumbnail({ type: 'SET_LOADED', payload: true });
   };
 
   const handleThumbnailError = (): void => {
-    setIsThumbnailLoaded(false);
+    dispatchThumbnail({ type: 'RESET' });
   };
 
   const handleUrlBlur = useCallback(() => {
     const trimmed = localBook.url?.trim() || '';
+    if (!trimmed) return;
+    
     const normalized = normalizeYouTubeUrl(trimmed);
-    if (normalized && normalized !== localBook.url) {
-      // Use existing handleChange to keep update flow consistent (debounce, validation)
-      handleChange('url', normalized);
-      if (!skipAutoMetadataFetch) {
-        if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current);
-        fetchTimeoutRef.current = setTimeout(() => attemptFetchMetadata(normalized), 500);
-      }
-    }
-  }, [localBook, handleChange, attemptFetchMetadata, skipAutoMetadataFetch]);
-
-  const handlePasteClick = useCallback(async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (!text) return;
-      const raw = text.trim();
-      const normalized = normalizeYouTubeUrl(raw);
-
-      const valueToSet = normalized || raw;
-      // set local state immediately so disabled input shows value
+    // Always update with normalized URL (or original if not a YouTube URL)
+    const valueToSet = normalized || trimmed;
+    
+    if (valueToSet !== localBook.url) {
+      // Update input with normalized URL before fetching metadata
       const updatedImmediate = { ...localBook, url: valueToSet };
-      setLocalBook(updatedImmediate);
+      dispatchBook({ type: 'SYNC_FROM_PROP', payload: updatedImmediate });
       handleChange('url', valueToSet, { skipDebounce: true });
-      // Immediately propagate to parent to avoid later debounce overwriting
       onBookChange(updatedImmediate);
-
-      // Clear any pending debounced change just in case
-      if (changeThrottleRef.current) {
-        clearTimeout(changeThrottleRef.current);
-        changeThrottleRef.current = null;
-      }
-
-      // If normalized, fetch metadata immediately (don't rely on isUrlValid timing)
-      if (normalized && !skipAutoMetadataFetch) {
-        try {
-          const metadata = await fetchMetadata(normalized);
-          if (metadata) {
-            const diffs = metadataComparisonService.compareMetadata(localBook, metadata);
-
-            if (diffs.length > 0) {
-              setComparisons(diffs);
-              setSelectedValues(metadataComparisonService.createDefaultSelectedValues(diffs));
-              setComparisonDialogOpen(true);
-            } else {
-              const updatedBook = metadataComparisonService.autoUpdateEmptyFields(
-                { ...localBook, url: valueToSet },
-                metadata
-              );
-              setLocalBook(updatedBook);
-              onBookChange(updatedBook);
-            }
-          }
-        } catch (err) {
-          console.error('Failed to fetch metadata after paste:', err);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to read clipboard:', err);
     }
-  }, [handleChange, fetchMetadata, localBook, onBookChange, skipAutoMetadataFetch, metadataComparisonService]);
+    
+    // Only fetch metadata if we have a normalized YouTube URL
+    if (normalized && !skipAutoMetadataFetch) {
+      if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current);
+      fetchTimeoutRef.current = setTimeout(() => attemptFetchMetadata(normalized), 500);
+    }
+  }, [localBook, handleChange, onBookChange, attemptFetchMetadata, skipAutoMetadataFetch]);
 
   const handleUrlPaste = useCallback(
     async (e: React.ClipboardEvent<HTMLInputElement>) => {
@@ -240,11 +268,15 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false 
       e.preventDefault();
 
       const normalized = normalizeYouTubeUrl(pasted);
-      const valueToSet = normalized || pasted;
+      // Only use normalized URL, don't allow non-YouTube URLs
+      if (!normalized) {
+        return;
+      }
+      const valueToSet = normalized;
 
       const updatedImmediate = { ...localBook, url: valueToSet };
       // Update local and parent immediately, skip debounce to avoid later overwrite
-      setLocalBook(updatedImmediate);
+      dispatchBook({ type: 'SYNC_FROM_PROP', payload: updatedImmediate });
       handleChange('url', valueToSet, { skipDebounce: true });
       onBookChange(updatedImmediate);
 
@@ -264,13 +296,19 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false 
               setComparisons(diffs);
               setSelectedValues(metadataComparisonService.createDefaultSelectedValues(diffs));
               setComparisonDialogOpen(true);
+              if (onMetadataFetchSuccess) {
+                onMetadataFetchSuccess();
+              }
             } else {
               const updatedBook = metadataComparisonService.autoUpdateEmptyFields(
                 { ...localBook, url: valueToSet },
                 metadata
               );
-              setLocalBook(updatedBook);
+              dispatchBook({ type: 'SYNC_FROM_PROP', payload: updatedBook });
               onBookChange(updatedBook);
+              if (onMetadataFetchSuccess) {
+                onMetadataFetchSuccess();
+              }
             }
           }
         } catch (err) {
@@ -278,7 +316,7 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false 
         }
       }
     },
-    [normalizeYouTubeUrl, handleChange, fetchMetadata, localBook, onBookChange, skipAutoMetadataFetch, metadataComparisonService]
+    [handleChange, fetchMetadata, localBook, onBookChange, skipAutoMetadataFetch, metadataComparisonService, onMetadataFetchSuccess]
   );
 
   const handleComparisonSelect = (fieldName: string, value: 'current' | 'fetched') => {
@@ -287,7 +325,7 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false 
 
   const handleApplyComparison = () => {
     const updatedBook = metadataComparisonService.mergeSelectedValues(localBook, comparisons, selectedValues);
-    setLocalBook(updatedBook);
+    dispatchBook({ type: 'SYNC_FROM_PROP', payload: updatedBook });
     onBookChange(updatedBook);
     setComparisonDialogOpen(false);
   };
@@ -334,7 +372,6 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false 
     // Handlers
     handleChange,
     handleUrlBlur,
-    handlePasteClick,
     handleUrlPaste,
     handleThumbnailLoad,
     handleThumbnailError,

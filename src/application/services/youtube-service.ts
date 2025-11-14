@@ -27,9 +27,11 @@ export function normalizeYouTubeUrl(input: string | null | undefined): string | 
       if (pathname.startsWith('/watch')) {
         id = url.searchParams.get('v');
       } else if (pathname.startsWith('/embed/')) {
-        id = pathname.split('/')[2];
+        const embedId = pathname.split('/')[2];
+        id = embedId ?? null;
       } else if (pathname.startsWith('/shorts/')) {
-        id = pathname.split('/')[2];
+        const shortsId = pathname.split('/')[2];
+        id = shortsId ?? null;
       } else {
         // Some other forms might still carry the v= param
         id = url.searchParams.get('v') || id;
@@ -38,7 +40,8 @@ export function normalizeYouTubeUrl(input: string | null | undefined): string | 
 
     if (id) {
       // Strip query/hash fragments if present
-      id = id.split(/[?#&]/)[0];
+      const splitResult = id.split(/[?#&]/)[0];
+      id = splitResult ?? null;
     }
 
     // Fallback: try to extract an 11-char ID from the raw input using regex
@@ -53,7 +56,7 @@ export function normalizeYouTubeUrl(input: string | null | undefined): string | 
     }
 
     return null;
-  } catch (err) {
+  } catch {
     // If URL parsing fails, try a best-effort regex extraction
     const m = trimmed.match(/(?:v=|\/|be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
     if (m && m[1]) return `https://www.youtube.com/watch?v=${m[1]}`;
@@ -67,7 +70,7 @@ export function extractYouTubeVideoId(input: string | null | undefined): string 
   try {
     const url = new URL(normalized);
     return url.searchParams.get('v');
-  } catch (err) {
+  } catch {
     return null;
   }
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Typography, Box, Container, Paper, Stack, Alert, Link, Button } from '@mui/material';
+import { Typography, Box, Container, Paper, Stack, Alert, Button } from '@mui/material';
 import '@/infrastructure/di/container';
 import { useAppStore, usePersistStore } from '@/application/stores';
 import { BookList, Settings, GetDownloadCommandButton, Lightbox, AppHeader, AppFooter } from '@/components';
