@@ -217,3 +217,9 @@ This document defines the functional requirements for the YT Audiobook Download 
 - Update theme immediately upon toggle without requiring page refresh
 - Maintain theme state across page refreshes by restoring from localStorage
 
+### REQ0042: YouTube URL Normalization
+- Normalize pasted or entered YouTube URLs to the canonical form: `https://www.youtube.com/watch?v={{id}}`
+- Strip timecodes, playlists, and irrelevant query parameters (e.g., `t=`, `list=`, `si=`, `feature=`)
+- Support and normalize the following URL types: standard watch, shortened `youtu.be`, mobile (`m.youtube.com`), embed (`/embed/`), shorts (`/shorts/`) and URLs containing additional fragments
+- Normalize on input blur and before fetching metadata so downstream logic always receives a canonical URL
+- If normalization fails, keep the original input but do not attempt metadata fetch

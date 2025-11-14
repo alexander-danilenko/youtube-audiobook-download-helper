@@ -29,7 +29,7 @@ export class ScriptGeneratorService {
   --parse-metadata "${this.escapeShellString(book.author)}:%(artist)s" \\
   --parse-metadata "${this.escapeShellString(book.series || '')}:%(album)s" \\
   --parse-metadata "${this.escapeShellString(book.narrator || '')}:%(composer)s" \\
-  --parse-metadata "${book.seriesNumber}:%(track_number)s" \\
+  --parse-metadata "${this.escapeShellString(book.seriesNumber?.toString() || '')}:%(track_number)s" \\
   --postprocessor-args "ffmpeg:-c:a copy" \\
   -o "${escapedFilename}" \\
   "${escapedUrl}"`;
@@ -41,19 +41,20 @@ export class ScriptGeneratorService {
     const escapedUrl = this.escapeShellString(book.url);
     const cookiesOption = cookiesBrowser !== 'none' ? ` --cookies-from-browser "${cookiesBrowser}"` : '';
 
-    return `yt-dlp --extract-audio --audio-format m4a --embed-chapters --embed-metadata --embed-thumbnail --convert-thumbnails jpg${cookiesOption} --replace-in-metadata "genre" ".*" "Audiobook" --parse-metadata "${this.escapeShellString(book.title)}:%(title)s" --parse-metadata "${this.escapeShellString(book.author)}:%(artist)s" --parse-metadata "${this.escapeShellString(book.series || '')}:%(album)s" --parse-metadata "${this.escapeShellString(book.narrator || '')}:%(composer)s" --parse-metadata "${book.seriesNumber}:%(track_number)s" --postprocessor-args "ffmpeg:-c:a copy" -o "${escapedFilename}" "${escapedUrl}"`;
+    return `yt-dlp --extract-audio --audio-format m4a --embed-chapters --embed-metadata --embed-thumbnail --convert-thumbnails jpg${cookiesOption} --replace-in-metadata "genre" ".*" "Audiobook" --parse-metadata "${this.escapeShellString(book.title)}:%(title)s" --parse-metadata "${this.escapeShellString(book.author)}:%(artist)s" --parse-metadata "${this.escapeShellString(book.series || '')}:%(album)s" --parse-metadata "${this.escapeShellString(book.narrator || '')}:%(composer)s" --parse-metadata "${this.escapeShellString(book.seriesNumber?.toString() || '')}:%(track_number)s" --postprocessor-args "ffmpeg:-c:a copy" -o "${escapedFilename}" "${escapedUrl}"`;
   }
 
   private processFilenameTemplate(book: BookDto, template: string): string {
     let result = template;
 
-    // Replace custom variables - replace longer variable names first to avoid partial matches
-    result = result.replace(/\$series_num/g, book.seriesNumber?.toString() || '1');
-    result = result.replace(/\$author/g, book.author || '');
-    result = result.replace(/\$title/g, book.title || '');
-    result = result.replace(/\$narrator/g, book.narrator || '');
-    result = result.replace(/\$series/g, book.series || '');
-    result = result.replace(/\$year/g, book.year?.toString() || '');
+    // Sanitize and replace custom variables - replace longer variable names first to avoid partial matches
+    // Sanitize book data before insertion to prevent injection
+    result = result.replace(/\$series_num/g, this.sanitizeForFilename(book.seriesNumber?.toString() || '1'));
+    result = result.replace(/\$author/g, this.sanitizeForFilename(book.author || ''));
+    result = result.replace(/\$title/g, this.sanitizeForFilename(book.title || ''));
+    result = result.replace(/\$narrator/g, this.sanitizeForFilename(book.narrator || ''));
+    result = result.replace(/\$series/g, this.sanitizeForFilename(book.series || ''));
+    result = result.replace(/\$year/g, this.sanitizeForFilename(book.year?.toString() || ''));
 
     // Handle optional brackets - remove empty brackets and their contents after variable substitution
     result = result.replace(/\[([^\]]*)\]/g, (match, content) => {
@@ -84,12 +85,46 @@ export class ScriptGeneratorService {
     return result;
   }
 
+  /**
+   * Escapes a string for safe use inside double quotes in bash scripts.
+   * Escapes: backslash, double quote, dollar sign, backtick, and removes control characters.
+   */
   private escapeShellString(str: string): string {
     return str
+      // Remove control characters (including newlines and carriage returns)
+      // These should not appear in filenames anyway
+      .replace(/[\x00-\x1F\x7F]/g, '')
+      // Escape backslash first (must be first to avoid double-escaping)
       .replace(/\\/g, '\\\\')
+      // Escape double quotes
       .replace(/"/g, '\\"')
+      // Escape dollar signs (prevents variable expansion)
       .replace(/\$/g, '\\$')
+      // Escape backticks (prevents command substitution)
       .replace(/`/g, '\\`');
+  }
+
+  /**
+   * Sanitizes input data before inserting into filename template.
+   * Removes dangerous characters that could lead to shell injection.
+   * This is a defense-in-depth measure before final escaping.
+   */
+  private sanitizeForFilename(input: string): string {
+    if (!input) {
+      return '';
+    }
+
+    return input
+      // Remove control characters (newlines, tabs, etc.)
+      .replace(/[\x00-\x1F\x7F]/g, '')
+      // Remove shell command separators
+      .replace(/[;&|<>]/g, '')
+      // Remove parentheses (could be used for command substitution)
+      .replace(/[()]/g, '')
+      // Remove curly braces (could be used for variable expansion in some contexts)
+      .replace(/[{}]/g, '')
+      // Trim whitespace
+      .trim();
   }
 }
 

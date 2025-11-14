@@ -8,7 +8,8 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { BookDto, bookDtoSchema } from '../application/dto/book-dto';
 import { useThumbnail } from '../hooks/use-thumbnail';
 import { useYouTubeMetadata } from '../hooks/use-youtube-metadata';
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { normalizeYouTubeUrl } from '../application/services/youtube-service';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import { TextTransformMenu } from './text-transform-menu';
 import { useAppStore } from '../application/stores/app-store';
@@ -36,6 +37,7 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
   const { isLoading, fetchMetadata, error: metadataError } = useYouTubeMetadata();
   const changeThrottleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pasteIgnoreRef = useRef<boolean>(false);
   
   // Local state for immediate UI updates (no lag)
   const [localBook, setLocalBook] = useState<BookDto>(book);
@@ -235,6 +237,58 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
     setIsThumbnailLoaded(false);
   };
 
+  const handleUrlBlur = useCallback(() => {
+    const trimmed = localBook.url?.trim() || '';
+    const normalized = normalizeYouTubeUrl(trimmed);
+    if (normalized && normalized !== localBook.url) {
+      // Use existing handleChange to keep update flow consistent (debounce, validation)
+      handleChange('url', normalized);
+      if (!skipAutoMetadataFetch) {
+        if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current);
+        fetchTimeoutRef.current = setTimeout(() => attemptFetchMetadata(normalized), 500);
+      }
+    }
+  }, [localBook, normalizeYouTubeUrl, handleChange, attemptFetchMetadata, skipAutoMetadataFetch]);
+
+  const handleUrlPaste = useCallback((e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedRaw = e.clipboardData.getData('text') || '';
+    const pasted = pastedRaw.trim();
+    const normalized = normalizeYouTubeUrl(pasted);
+
+    // Prevent default to avoid DOM-only paste into controlled input
+    e.preventDefault();
+
+    if (normalized) {
+      // Immediately update native input and controlled state with normalized URL
+      try {
+        const input = e.currentTarget as HTMLInputElement;
+        input.value = normalized;
+        input.setSelectionRange(normalized.length, normalized.length);
+      } catch (err) {
+        // ignore
+      }
+      setLocalBook((prev) => ({ ...prev, url: normalized }));
+      handleChange('url', normalized);
+
+      if (!skipAutoMetadataFetch) {
+        if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current);
+        fetchTimeoutRef.current = setTimeout(() => attemptFetchMetadata(normalized), 500);
+      }
+    } else {
+      // If normalization fails, keep the raw pasted value in the input (do not fetch metadata)
+      try {
+        const input = e.currentTarget as HTMLInputElement;
+        input.value = pasted;
+        input.setSelectionRange(pasted.length, pasted.length);
+      } catch (err) {
+        // ignore
+      }
+      setLocalBook((prev) => ({ ...prev, url: pasted }));
+      // Propagate via handleChange so parent state and validation remain consistent
+      handleChange('url', pasted);
+    }
+  }, [normalizeYouTubeUrl, handleChange, attemptFetchMetadata, skipAutoMetadataFetch]);
+
   // Derived computed values - use local state for immediate UI updates
   const isEmpty = useMemo(() => (
     !localBook.url.trim() &&
@@ -343,7 +397,7 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
           </>
         }
         value={localBook.url}
-        onChange={(e) => handleChange('url', e.target.value)}
+        onChange={(e) => handleChange('url', e.target.value)} onBlur={handleUrlBlur} onPaste={handleUrlPaste}
         fullWidth
         variant="outlined"
         size="small"

@@ -4,6 +4,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { TextField, InputAdornment, CircularProgress } from '@mui/material';
 import { TextTransformMenu } from './text-transform-menu';
 import { useYouTubeMetadata } from '../hooks/use-youtube-metadata';
+import { normalizeYouTubeUrl } from '../application/services/youtube-service';
 
 interface YouTubeUrlCellProps {
   value: string;
@@ -25,37 +26,26 @@ export const YouTubeUrlCell: React.FC<YouTubeUrlCellProps> = ({ value, onChange,
     previousUrlRef.current = '';
   }, [value]);
 
-  const attemptFetchMetadata = useCallback(async (url: string) => {
-    console.log('YouTubeUrlCell: attemptFetchMetadata called with URL:', url);
-    console.log('YouTubeUrlCell: previousUrlRef.current:', previousUrlRef.current);
-    console.log('YouTubeUrlCell: onMetadataFetched:', typeof onMetadataFetched);
+  const attemptFetchMetadata = useCallback(async (rawUrl: string) => {
+    console.log('YouTubeUrlCell: attemptFetchMetadata called with URL:', rawUrl);
+    const normalized = normalizeYouTubeUrl(rawUrl);
+    console.log('YouTubeUrlCell: normalized URL:', normalized);
 
-    if (!url || url.trim().length === 0 || url === previousUrlRef.current) {
-      console.log('YouTubeUrlCell: Skipping fetch - empty URL or already fetched');
+    if (!normalized || normalized === previousUrlRef.current) {
+      console.log('YouTubeUrlCell: Skipping fetch - empty or already fetched after normalization');
       return;
     }
 
-    previousUrlRef.current = url;
+    previousUrlRef.current = normalized;
 
-    // Validate it's a YouTube URL first
     try {
-      const youtubePattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/i;
-      const isValid = youtubePattern.test(url.trim());
-      console.log('YouTubeUrlCell: URL validation result:', isValid);
-      
-      if (isValid) {
-        console.log('YouTubeUrlCell: Calling fetchMetadata...');
-        const metadata = await fetchMetadata(url);
-        console.log('YouTubeUrlCell: fetchMetadata returned:', metadata);
-        
-        if (metadata && onMetadataFetched) {
-          console.log('YouTubeUrlCell: Calling onMetadataFetched with:', metadata.title, metadata.authorName);
-          onMetadataFetched(metadata.title, metadata.authorName);
-        } else {
-          console.log('YouTubeUrlCell: Not calling onMetadataFetched - metadata:', metadata, 'callback:', onMetadataFetched);
-        }
-      } else {
-        console.log('YouTubeUrlCell: URL does not match YouTube pattern');
+      console.log('YouTubeUrlCell: Calling fetchMetadata with normalized URL...');
+      const metadata = await fetchMetadata(normalized);
+      console.log('YouTubeUrlCell: fetchMetadata returned:', metadata);
+
+      if (metadata && onMetadataFetched) {
+        console.log('YouTubeUrlCell: Calling onMetadataFetched with:', metadata.title, metadata.authorName);
+        onMetadataFetched(metadata.title, metadata.authorName);
       }
     } catch (error) {
       console.error('YouTubeUrlCell: Error fetching YouTube metadata:', error);
@@ -65,7 +55,7 @@ export const YouTubeUrlCell: React.FC<YouTubeUrlCellProps> = ({ value, onChange,
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setLocalValue(newValue);
-    
+
     // Clear existing timeout
     if (fetchTimeoutRef.current) {
       clearTimeout(fetchTimeoutRef.current);
@@ -83,15 +73,42 @@ export const YouTubeUrlCell: React.FC<YouTubeUrlCellProps> = ({ value, onChange,
       clearTimeout(fetchTimeoutRef.current);
       fetchTimeoutRef.current = null;
     }
-    
-    // Trigger fetch immediately if URL is valid and changed
+
+    // Normalize value on blur and update parent/state
     const trimmedValue = localValue.trim();
-    if (trimmedValue && trimmedValue !== previousUrlRef.current) {
-      attemptFetchMetadata(trimmedValue);
+    const normalized = normalizeYouTubeUrl(trimmedValue);
+
+    if (normalized) {
+      // Update visible input and propagate normalized value
+      setLocalValue(normalized);
+      onChange(normalized);
+
+      if (normalized !== previousUrlRef.current) {
+        attemptFetchMetadata(normalized);
+      }
+    } else {
+      // If not a YouTube URL, just propagate raw value
+      onChange(localValue);
     }
-    
-    onChange(localValue);
   }, [localValue, onChange, attemptFetchMetadata]);
+
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData('text');
+    if (!pasted) return;
+
+    const normalized = normalizeYouTubeUrl(pasted.trim());
+    if (normalized) {
+      // Prevent default paste and replace input with normalized URL
+      e.preventDefault();
+      setLocalValue(normalized);
+      onChange(normalized);
+
+      if (normalized !== previousUrlRef.current) {
+        attemptFetchMetadata(normalized);
+      }
+    }
+    // If not normalized, allow default paste behavior
+  }, [onChange, attemptFetchMetadata]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -107,6 +124,7 @@ export const YouTubeUrlCell: React.FC<YouTubeUrlCellProps> = ({ value, onChange,
       value={localValue || ''}
       onChange={handleChange}
       onBlur={handleBlur}
+      onPaste={handlePaste}
       variant="outlined"
       size="small"
       fullWidth
