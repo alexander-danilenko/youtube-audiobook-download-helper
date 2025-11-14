@@ -62,6 +62,35 @@ export function useBookList({ books, onBooksChange }: UseBookListProps) {
     [books, onBooksChange, bookService, cleanupCollapsedState]
   );
 
+  const handleCloneBook = useCallback(
+    (bookId: string): void => {
+      const sourceBook = books.find((book) => book.id === bookId);
+      if (!sourceBook) return;
+
+      // Create a new book with a unique ID
+      const newBook = bookService.createEmptyBook();
+      
+      // Copy all metadata fields from source book (excluding URL)
+      const clonedBook: BookDto = {
+        ...newBook,
+        title: sourceBook.title,
+        author: sourceBook.author,
+        narrator: sourceBook.narrator,
+        series: sourceBook.series,
+        seriesNumber: sourceBook.seriesNumber,
+        year: sourceBook.year,
+        // URL is already empty from createEmptyBook()
+      };
+
+      // Add the cloned book to the list
+      onBooksChange([...books, clonedBook]);
+      
+      // Expand the new book
+      expandAllBooks([clonedBook.id]);
+    },
+    [books, onBooksChange, bookService, expandAllBooks]
+  );
+
   const isImported = useCallback(
     (bookId: string): boolean => {
       return importedBookIdsRef.current.has(bookId);
@@ -73,6 +102,7 @@ export function useBookList({ books, onBooksChange }: UseBookListProps) {
     handleAddRow,
     handleBookChange,
     handleBookRemove,
+    handleCloneBook,
     handleImportedBooks,
     isImported,
   };

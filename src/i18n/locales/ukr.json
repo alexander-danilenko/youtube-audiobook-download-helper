@@ -26,6 +26,8 @@
   "book_card_series_number_helper": "№ книги в серії",
   "book_card_refresh_metadata": "Оновити метадані з YouTube",
   "book_card_metadata_fetch_success": "Метадані відео YouTube успішно отримано",
+  "book_card_clone_book": "клонувати книгу",
+  "book_card_clone_success": "Книгу успішно клоновано",
   "book_card_remove_book": "видалити книгу",
   "metadata_dialog_title": "Конфліктуючі метадані",
   "metadata_dialog_description": "Отримані метадані відрізняються від ваших поточних даних. Будь ласка, оберіть, які значення залишити:",

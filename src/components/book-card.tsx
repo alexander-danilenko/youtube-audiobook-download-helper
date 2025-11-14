@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { TextField, Box, Paper, Typography, IconButton, InputAdornment, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Button, Radio, FormControlLabel, Collapse, Tooltip, Snackbar, Alert } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -17,11 +18,12 @@ interface BookCardProps {
   book: BookDto;
   onBookChange: (updatedBook: BookDto) => void;
   onRemove: () => void;
+  onClone: () => void;
   onThumbnailClick: (imageUrl: string) => void;
   skipAutoMetadataFetch?: boolean;
 }
 
-export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipAutoMetadataFetch = false }: BookCardProps) {
+export function BookCard({ book, onBookChange, onRemove, onClone, onThumbnailClick, skipAutoMetadataFetch = false }: BookCardProps) {
   const { t } = useTranslation();
   const tString = useTranslationString();
   const urlInputRef = React.useRef<HTMLInputElement>(null);
@@ -119,6 +121,21 @@ export function BookCard({ book, onBookChange, onRemove, onThumbnailClick, skipA
           >
             {isEmpty ? t('books_add_new_book_placeholder') : formatCollapsedHeading || t('books_new_book')}
           </Typography>
+          <Tooltip title={tString('book_card_clone_book')}>
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                onClone();
+                setSnackbarMessage(t('book_card_clone_success') as string);
+                setSnackbarOpen(true);
+              }}
+              aria-label={tString('book_card_clone_book')}
+              sx={{ flexShrink: 0 }}
+              disabled={isLoading}
+            >
+              <ContentCopyIcon />
+            </IconButton>
+          </Tooltip>
           <IconButton
             onClick={(e) => {
               e.stopPropagation();

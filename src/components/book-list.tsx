@@ -16,7 +16,7 @@ interface BookListProps {
 
 export function BookList({ books, onBooksChange, onThumbnailClick }: BookListProps) {
   const { t } = useTranslation();
-  const { handleAddRow, handleBookChange, handleBookRemove, handleImportedBooks, isImported } = useBookList({
+  const { handleAddRow, handleBookChange, handleBookRemove, handleCloneBook, handleImportedBooks, isImported } = useBookList({
     books,
     onBooksChange,
   });
@@ -30,6 +30,7 @@ export function BookList({ books, onBooksChange, onThumbnailClick }: BookListPro
             book={book}
             onBookChange={handleBookChange}
             onRemove={() => handleBookRemove(book.id)}
+            onClone={() => handleCloneBook(book.id)}
             onThumbnailClick={onThumbnailClick}
             skipAutoMetadataFetch={isImported(book.id)}
           />

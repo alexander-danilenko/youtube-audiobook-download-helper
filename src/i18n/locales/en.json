@@ -26,6 +26,8 @@
   "book_card_series_number_helper": "Book # in series",
   "book_card_refresh_metadata": "Refresh metadata from YouTube",
   "book_card_metadata_fetch_success": "YouTube video metadata successfully fetched",
+  "book_card_clone_book": "clone book",
+  "book_card_clone_success": "Book cloned successfully",
   "book_card_remove_book": "remove book",
   "metadata_dialog_title": "Conflicting Metadata",
   "metadata_dialog_description": "The fetched metadata differs from your current data. Please select which values to keep:",
