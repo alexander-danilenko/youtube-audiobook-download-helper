@@ -27,6 +27,7 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
   const changeThrottleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const titleFetchInitiatedRef = useRef<string | null>(null);
+  const originalNormalizedUrlRef = useRef<string>('');
 
   // Local state for immediate UI updates (no lag)
   // Use reducer to sync props to state without triggering setState-in-effect warning
@@ -44,14 +45,27 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
   const [localBook, dispatchBook] = useReducer(bookReducer, book);
   const previousBookIdRef = useRef<string>(book.id);
 
+  // Initialize original normalized URL on mount
+  useEffect(() => {
+    const normalized = normalizeYouTubeUrl(book.url?.trim() || '');
+    originalNormalizedUrlRef.current = normalized || '';
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Sync local state with prop changes from parent — only when the book id changes
   // Using reducer dispatch instead of setState to avoid the warning
   useEffect(() => {
     if (previousBookIdRef.current !== book.id) {
       previousBookIdRef.current = book.id;
       dispatchBook({ type: 'SYNC_FROM_PROP', payload: book });
+      // Initialize original normalized URL when book changes
+      const normalized = normalizeYouTubeUrl(book.url?.trim() || '');
+      originalNormalizedUrlRef.current = normalized || '';
+    } else if (book.url !== localBook.url) {
+      // If URL changed externally (not by user editing), update the original normalized URL
+      const normalized = normalizeYouTubeUrl(book.url?.trim() || '');
+      originalNormalizedUrlRef.current = normalized || '';
     }
-  }, [book, book.id]);
+  }, [book, book.id, book.url, localBook.url]);
 
   // Comparison dialog state
   const [comparisonDialogOpen, setComparisonDialogOpen] = useState(false);
@@ -255,14 +269,15 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
             const urlValue = parsedValue.trim();
             if (urlValue) {
               const normalized = normalizeYouTubeUrl(urlValue);
-              // Only fetch if we have a valid normalized YouTube URL
-              if (normalized) {
+              // Only fetch if we have a valid normalized YouTube URL and it's different from the original
+              if (normalized && normalized !== originalNormalizedUrlRef.current) {
                 // Update input with normalized URL before fetching (if different)
                 if (normalized !== urlValue) {
                   dispatchBook({ type: 'UPDATE', payload: { url: normalized } });
                   onBookChange({ ...updatedBook, url: normalized });
                 }
                 
+                originalNormalizedUrlRef.current = normalized;
                 if (fetchTimeoutRef.current) {
                   clearTimeout(fetchTimeoutRef.current);
                 }
@@ -299,7 +314,10 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
 
   const handleUrlBlur = useCallback(() => {
     const trimmed = localBook.url?.trim() || '';
-    if (!trimmed) return;
+    if (!trimmed) {
+      originalNormalizedUrlRef.current = '';
+      return;
+    }
     
     const normalized = normalizeYouTubeUrl(trimmed);
     // Always update with normalized URL (or original if not a YouTube URL)
@@ -313,10 +331,13 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
       onBookChange(updatedImmediate);
     }
     
-    // Only fetch metadata if we have a normalized YouTube URL
-    if (normalized && !skipAutoMetadataFetch) {
+    // Only fetch metadata if the normalized URL is different from the original
+    if (normalized && normalized !== originalNormalizedUrlRef.current && !skipAutoMetadataFetch) {
+      originalNormalizedUrlRef.current = normalized;
       if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current);
       fetchTimeoutRef.current = setTimeout(() => attemptFetchMetadata(normalized), 500);
+    } else if (!normalized) {
+      originalNormalizedUrlRef.current = '';
     }
   }, [localBook, handleChange, onBookChange, attemptFetchMetadata, skipAutoMetadataFetch]);
 
@@ -347,7 +368,9 @@ export function useBookCard({ book, onBookChange, skipAutoMetadataFetch = false,
         changeThrottleRef.current = null;
       }
 
-      if (normalized && !skipAutoMetadataFetch) {
+      // Only fetch metadata if the normalized URL is different from the original
+      if (normalized && normalized !== originalNormalizedUrlRef.current && !skipAutoMetadataFetch) {
+        originalNormalizedUrlRef.current = normalized;
         try {
           const metadata = await fetchMetadata(normalized);
           if (metadata) {

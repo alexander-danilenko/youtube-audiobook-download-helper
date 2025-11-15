@@ -19,6 +19,7 @@ export function useYouTubeUrl({
   const previousUrlRef = useRef<string>('');
   const fetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousValueRef = useRef<string>(value);
+  const originalNormalizedUrlRef = useRef<string>('');
   const isUserEditingRef = useRef<boolean>(false);
   
   // Use reducer to sync props to state without triggering setState-in-effect warning
@@ -35,12 +36,20 @@ export function useYouTubeUrl({
   };
   const [localValue, dispatchValue] = useReducer(valueReducer, value);
 
+  // Initialize original normalized URL on mount
+  useEffect(() => {
+    const normalized = normalizeYouTubeUrl(value.trim());
+    originalNormalizedUrlRef.current = normalized || '';
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Sync local value with prop changes when not actively editing
   // Using reducer dispatch instead of setState to avoid the warning
   useEffect(() => {
     if (previousValueRef.current !== value && !isUserEditingRef.current) {
       previousValueRef.current = value;
       previousUrlRef.current = '';
+      const normalized = normalizeYouTubeUrl(value.trim());
+      originalNormalizedUrlRef.current = normalized || '';
       dispatchValue({ type: 'SYNC_FROM_PROP', payload: value });
     }
   }, [value]);
@@ -82,7 +91,11 @@ export function useYouTubeUrl({
       // Debounce: fetch metadata after user stops typing (500ms)
       if (!skipAutoMetadataFetch) {
         fetchTimeoutRef.current = setTimeout(() => {
-          attemptFetchMetadata(newValue.trim());
+          const normalized = normalizeYouTubeUrl(newValue.trim());
+          if (normalized && normalized !== originalNormalizedUrlRef.current) {
+            originalNormalizedUrlRef.current = normalized;
+            attemptFetchMetadata(normalized);
+          }
           isUserEditingRef.current = false;
         }, 500);
       } else {
@@ -110,12 +123,15 @@ export function useYouTubeUrl({
       dispatchValue({ type: 'UPDATE', payload: normalized });
       onChange(normalized);
 
-      if (normalized !== previousUrlRef.current && !skipAutoMetadataFetch) {
+      // Only fetch metadata if the normalized URL is different from the original
+      if (normalized !== originalNormalizedUrlRef.current && !skipAutoMetadataFetch) {
+        originalNormalizedUrlRef.current = normalized;
         attemptFetchMetadata(normalized);
       }
     } else {
       // If not a YouTube URL, just propagate raw value
       onChange(localValue);
+      originalNormalizedUrlRef.current = '';
     }
   }, [localValue, onChange, attemptFetchMetadata, skipAutoMetadataFetch]);
 
@@ -132,7 +148,9 @@ export function useYouTubeUrl({
         dispatchValue({ type: 'UPDATE', payload: normalized });
         onChange(normalized);
 
-        if (normalized !== previousUrlRef.current && !skipAutoMetadataFetch) {
+        // Only fetch metadata if the normalized URL is different from the original
+        if (normalized !== originalNormalizedUrlRef.current && !skipAutoMetadataFetch) {
+          originalNormalizedUrlRef.current = normalized;
           attemptFetchMetadata(normalized);
         }
       }
