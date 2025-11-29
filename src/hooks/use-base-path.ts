@@ -10,9 +10,9 @@ export function useBasePath(): string {
   }
 
   const fullPath = window.location.pathname;
-  // Find where /en or /ukr appears in the path
-  const langMatch = fullPath.match(/^\/(.+?)\/(en|ukr)(\/|$)/);
-  if (langMatch && langMatch[1] && langMatch[1] !== 'en' && langMatch[1] !== 'ukr') {
+  // Find where /en or /uk appears in the path
+  const langMatch = fullPath.match(/^\/(.+?)\/(en|uk)(\/|$)/);
+  if (langMatch && langMatch[1] && langMatch[1] !== 'en' && langMatch[1] !== 'uk') {
     // We have a base path like "/my-app"
     return `/${langMatch[1]}`;
   }

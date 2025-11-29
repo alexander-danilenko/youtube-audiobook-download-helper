@@ -21,7 +21,7 @@ export function AppHeader() {
   const handleLanguageChange = (newLang: Language): void => {
     // Use pathname from Next.js which already accounts for basePath
     // Replace the language segment anywhere in the path
-    const newPath = pathname.replace(/\/(en|ukr)(\/|$)/, `/${newLang}$2`);
+    const newPath = pathname.replace(/\/(en|uk)(\/|$)/, `/${newLang}$2`);
     router.push(newPath);
   };
 
@@ -123,7 +123,7 @@ export function AppHeader() {
                 }}
               >
                 <MenuItem value="en">English</MenuItem>
-                <MenuItem value="ukr">Українська</MenuItem>
+                <MenuItem value="uk">Українська</MenuItem>
               </Select>
             </FormControl>
           </Box>

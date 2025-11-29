@@ -12,7 +12,7 @@ export default function Home() {
   const params = useParams();
   const router = useRouter();
   const lang = params?.lang as Language | undefined;
-  
+
   // Initialize persistence and wait for hydration
   const isHydrated = usePersistStore();
   const { t, tMarkdown } = useTranslation();
@@ -20,9 +20,9 @@ export default function Home() {
 
   // Sync URL language with store
   useEffect(() => {
-    if (lang && (lang === 'en' || lang === 'ukr')) {
+    if (lang && (lang === 'en' || lang === 'uk')) {
       setLanguage(lang);
-    } else if (lang && lang !== 'en' && lang !== 'ukr') {
+    } else if (lang && lang !== 'en' && lang !== 'uk') {
       // Invalid language, redirect to English
       router.replace('/en');
     }
@@ -44,14 +44,14 @@ export default function Home() {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   // Prevent hydration mismatch by not rendering until state is loaded
-  if (!isHydrated || !lang || (lang !== 'en' && lang !== 'ukr')) {
+  if (!isHydrated || !lang || (lang !== 'en' && lang !== 'uk')) {
     return null;
   }
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
       <AppHeader />
-      
+
       <Box component="main" sx={{ flexGrow: 1, py: { xs: 0, sm: 3 } }}>
         <Container maxWidth="xl" sx={{ px: { xs: 0, sm: 3 } }}>
           <Stack spacing={{ xs: 0, sm: 3 }}>
@@ -94,19 +94,19 @@ export default function Home() {
                       borderWidth: 2,
                       width: { xs: '100%', sm: 'auto' },
                       '&.MuiButton-outlined': {
-                        borderColor: (theme) => theme.palette.mode === 'dark' 
-                          ? 'rgba(255, 255, 255, 0.5)' 
+                        borderColor: (theme) => theme.palette.mode === 'dark'
+                          ? 'rgba(255, 255, 255, 0.5)'
                           : undefined,
-                        color: (theme) => theme.palette.mode === 'dark' 
-                          ? 'rgba(255, 255, 255, 0.9)' 
+                        color: (theme) => theme.palette.mode === 'dark'
+                          ? 'rgba(255, 255, 255, 0.9)'
                           : undefined,
                         '&:hover': {
                           borderWidth: 2,
-                          borderColor: (theme) => theme.palette.mode === 'dark' 
-                            ? 'rgba(255, 255, 255, 0.8)' 
+                          borderColor: (theme) => theme.palette.mode === 'dark'
+                            ? 'rgba(255, 255, 255, 0.8)'
                             : undefined,
-                          backgroundColor: (theme) => theme.palette.mode === 'dark' 
-                            ? 'rgba(255, 255, 255, 0.1)' 
+                          backgroundColor: (theme) => theme.palette.mode === 'dark'
+                            ? 'rgba(255, 255, 255, 0.1)'
                             : undefined,
                         },
                       },
@@ -124,19 +124,19 @@ export default function Home() {
                       borderWidth: 2,
                       width: { xs: '100%', sm: 'auto' },
                       '&.MuiButton-outlined': {
-                        borderColor: (theme) => theme.palette.mode === 'dark' 
-                          ? 'rgba(255, 255, 255, 0.5)' 
+                        borderColor: (theme) => theme.palette.mode === 'dark'
+                          ? 'rgba(255, 255, 255, 0.5)'
                           : undefined,
-                        color: (theme) => theme.palette.mode === 'dark' 
-                          ? 'rgba(255, 255, 255, 0.9)' 
+                        color: (theme) => theme.palette.mode === 'dark'
+                          ? 'rgba(255, 255, 255, 0.9)'
                           : undefined,
                         '&:hover': {
                           borderWidth: 2,
-                          borderColor: (theme) => theme.palette.mode === 'dark' 
-                            ? 'rgba(255, 255, 255, 0.8)' 
+                          borderColor: (theme) => theme.palette.mode === 'dark'
+                            ? 'rgba(255, 255, 255, 0.8)'
                             : undefined,
-                          backgroundColor: (theme) => theme.palette.mode === 'dark' 
-                            ? 'rgba(255, 255, 255, 0.1)' 
+                          backgroundColor: (theme) => theme.palette.mode === 'dark'
+                            ? 'rgba(255, 255, 255, 0.1)'
                             : undefined,
                         },
                       },

@@ -9,13 +9,13 @@ interface LanguageState {
 const defaultLanguage: Language = (() => {
   if (typeof window !== 'undefined') {
     const stored = localStorage.getItem('app-language');
-    if (stored === 'en' || stored === 'ukr') {
+    if (stored === 'en' || stored === 'uk') {
       return stored;
     }
     // Try to detect from browser
     const browserLang = navigator.language.split('-')[0];
     if (browserLang === 'uk') {
-      return 'ukr';
+      return 'uk';
     }
   }
   return 'en';

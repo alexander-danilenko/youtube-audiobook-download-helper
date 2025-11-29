@@ -9,16 +9,16 @@ export default function RootPage() {
   useEffect(() => {
     // Detect language from browser or localStorage
     let detectedLang = 'en';
-    
+
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('app-language');
-      if (stored === 'en' || stored === 'ukr') {
+      if (stored === 'en' || stored === 'uk') {
         detectedLang = stored;
       } else {
         // Try to detect from browser
         const browserLang = navigator.language.split('-')[0];
         if (browserLang === 'uk') {
-          detectedLang = 'ukr';
+          detectedLang = 'uk';
         }
       }
     }

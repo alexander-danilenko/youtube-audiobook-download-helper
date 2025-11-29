@@ -34,6 +34,6 @@ export default function LangLayout({
 export function generateStaticParams() {
   return [
     { lang: 'en' },
-    { lang: 'ukr' },
+    { lang: 'uk' },
   ];
 }
